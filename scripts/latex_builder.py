@@ -229,7 +229,15 @@ def build_cover_letter_tex(job_info: Dict[str, Any], custom_body: Optional[str] 
     date_str = datetime.now().strftime("%B %d, %Y")
     
     if custom_body and len(custom_body.strip()) > 50:
-        body_content = custom_body
+        paras = [p.strip() for p in custom_body.strip().split("\n\n") if p.strip()]
+        formatted_paras = []
+        for p in paras:
+            if not p.startswith(r"\noindent"):
+                p = rf"\noindent {p}"
+            if not p.endswith(r"\\"):
+                p = rf"{p} \vspace{{8pt}}\\"
+            formatted_paras.append(p)
+        body_content = "\n\n".join(formatted_paras)
     else:
         # Default fallback
         body_content = rf"""\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. As an Electronics and Communication Engineering student at USICT (GPA 8.42) with extensive hands-on expertise in ARM Cortex/STM32 firmware, ESP32-S3 dual-core FreeRTOS architectures, and custom KiCad multi-layer PCB hardware development, I am eager to contribute to {company}'s industry-leading engineering initiatives. \vspace{{8pt}}\\%

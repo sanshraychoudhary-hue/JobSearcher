@@ -35,13 +35,13 @@ def get_gemini_api_key() -> Optional[str]:
 
 
 def call_gemini(prompt: str, system_instruction: str = "") -> Optional[str]:
-    """Invokes Google Gemini 2.0 Flash / 1.5 Flash via REST API."""
+    """Invokes Google Gemini 3.5 Flash Lite via REST API."""
     api_key = get_gemini_api_key()
     if not api_key:
         return None
 
-    # Try gemini-2.0-flash first, fallback to gemini-1.5-flash
-    models = ["gemini-2.0-flash", "gemini-1.5-flash"]
+    # Priority: gemini-3.5-flash-lite first, fallback to 2.5-flash
+    models = ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"]
     for model in models:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
         payload: Dict[str, Any] = {
@@ -124,7 +124,11 @@ Write the tailored 3-paragraph body now:"""
 
         ai_response = call_gemini(prompt, system_instruction)
         if ai_response and len(ai_response.strip()) > 100:
-            return ai_response.strip()
+            cleaned = ai_response.strip()
+            cleaned = re.sub(r"^```(?:latex|tex)?\s*", "", cleaned, flags=re.MULTILINE)
+            cleaned = re.sub(r"```$", "", cleaned, flags=re.MULTILINE)
+            cleaned = re.sub(r'(?<!\\)&', r'\&', cleaned)
+            return cleaned.strip()
 
     # Domain-Aware Intelligent Heuristic Router (Fallback when API key is pending)
     lower_jd = (posting_md + " " + role).lower()
