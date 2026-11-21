@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-[#fbfaf8] dark:bg-[#121212] text-slate-800 dark:text-slate-100 antialiased">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dossier — Your job search, on your server</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter & Newsreader / Playfair for Dossier Editorial Serif -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Marked.js -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif'],
+          },
+          colors: {
+            dossier: {
+              bg: '#fbfaf8',
+              card: '#ffffff',
+              border: '#eae6df',
+              ink: '#1c1917',
+              muted: '#78716c',
+              highlight: '#f4efe6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    .font-dossier-serif { font-family: 'Newsreader', Georgia, serif; }
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 4px; }
+    .dark ::-webkit-scrollbar-thumb { background: #292524; }
+    .markdown-body h1 { font-family: 'Newsreader', serif; font-size: 1.6rem; font-weight: 500; margin-bottom: 0.75rem; }
+    .markdown-body h2 { font-size: 1.15rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-body h3 { font-size: 0.95rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.25rem; }
+    .markdown-body ul { list-style-type: disc; margin-left: 1.25rem; margin-bottom: 0.75rem; }
+    .markdown-body table { width: 100%; border-collapse: collapse; margin-top: 0.75rem; margin-bottom: 1rem; font-size: 0.825rem; }
+    .markdown-body th, .markdown-body td { border: 1px solid #e7e5e4; padding: 0.4rem 0.6rem; text-align: left; }
+    .markdown-body th { background: #f5f5f4; font-weight: 600; }
+    .dark .markdown-body th { background: #1c1917; border-color: #292524; }
+    .dark .markdown-body td { border-color: #292524; }
+    .paper-sheet { box-shadow: 0 4px 20px -2px rgba(0,0,0,0.08), 0 2px 6px -1px rgba(0,0,0,0.04); }
+  </style>
+</head>
+<body class="h-full flex overflow-hidden bg-[#fbfaf8] dark:bg-[#121212]">
+
+  <!-- Dossier Left Sidebar (Exact Replica) -->
+  <aside class="w-64 border-r border-[#eae6df] dark:border-[#262624] bg-[#fbfaf8] dark:bg-[#171716] flex flex-col justify-between shrink-0 select-none z-30">
+    <div class="flex flex-col p-3">
+      
+      <!-- Brand Header -->
+      <div class="flex items-center gap-2.5 px-2 py-1 mb-4">
+        <div class="w-7 h-7 rounded-md bg-[#1c1917] dark:bg-white flex items-center justify-center text-white dark:text-[#1c1917] font-serif font-bold text-base shadow-sm">
+          D
+        </div>
+        <div>
+          <h1 class="font-dossier-serif text-[21px] leading-tight font-medium tracking-tight text-[#1c1917] dark:text-white">Dossier</h1>
+          <p class="text-[10px] text-stone-400 dark:text-stone-500 tracking-tight leading-none">Self-hosted · Sanshray</p>
+        </div>
+      </div>
+
+      <!-- Primary Action: + New Application -->
+      <button onclick="openNewAppModal()" class="w-full flex items-center justify-center gap-2 py-2 px-3 mb-4 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:hover:bg-stone-100 dark:text-[#1c1917] text-white text-xs font-semibold shadow-sm transition">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        <span>New application</span>
+      </button>
+
+      <!-- Navigation Menu Groups -->
+      <nav class="space-y-4 text-xs font-medium text-stone-600 dark:text-stone-300">
+        
+        <!-- Group: Main -->
+        <div class="space-y-0.5">
+          <button onclick="navigateView('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg bg-[#ede8e0] dark:bg-stone-800 text-[#1c1917] dark:text-white font-semibold transition">
+            <i data-lucide="home" class="w-4 h-4"></i>
+            <span>Dashboard</span>
+          </button>
+        </div>
+
+        <!-- Group: You -->
+        <div class="space-y-0.5">
+          <div class="px-2.5 text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-1">You</div>
+          <button onclick="navigateView('profile')" id="nav-profile" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[#ede8e0]/60 dark:hover:bg-stone-800/60 transition">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="user" class="w-4 h-4"></i>
+              <span>Profile</span>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">96%</span>
+          </button>
+
+          <button onclick="navigateView('resume')" id="nav-resume" class="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-[#ede8e0]/60 dark:hover:bg-stone-800/60 transition">
+            <i data-lucide="file-text" class="w-4 h-4"></i>
+            <span>Base resume</span>
+          </button>
+        </div>
+
+        <!-- Group: Job search -->
+        <div class="space-y-0.5">
+          <div class="px-2.5 text-[11px] font-semibold text-stone-400 dark:text-stone-500 uppercase tracking-wider mb-1">Job Search</div>
+          <button onclick="navigateView('applications')" id="nav-applications" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[#ede8e0]/60 dark:hover:bg-stone-800/60 transition">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="briefcase" class="w-4 h-4"></i>
+              <span>Applications</span>
+            </div>
+            <span id="sidebar-app-count" class="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-200 dark:bg-stone-700 font-semibold">0</span>
+          </button>
+
+          <button onclick="navigateView('agent')" id="nav-agent" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[#ede8e0]/60 dark:hover:bg-stone-800/60 transition">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="bot" class="w-4 h-4"></i>
+              <span>Job Agent</span>
+            </div>
+            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+          </button>
+
+          <button onclick="navigateView('settings')" id="nav-settings" class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-[#ede8e0]/60 dark:hover:bg-stone-800/60 transition">
+            <div class="flex items-center gap-2.5">
+              <i data-lucide="sliders" class="w-4 h-4"></i>
+              <span>Portals & Settings</span>
+            </div>
+            <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 font-semibold">ATS</span>
+          </button>
+        </div>
+
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom Section -->
+    <div class="p-3 border-t border-[#eae6df] dark:border-[#262624] space-y-2 text-xs text-stone-500">
+      <div class="flex items-center justify-between px-2">
+        <span class="flex items-center gap-1.5 text-stone-600 dark:text-stone-400 font-medium">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-600"></i> Fact Guard Strict
+        </span>
+        <button onclick="toggleDarkMode()" class="p-1 rounded hover:bg-stone-200 dark:hover:bg-stone-800">
+          <i data-lucide="moon" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+      <div class="px-2 pt-1 flex items-center gap-2 border-t border-stone-200/60 dark:border-stone-800">
+        <div class="w-6 h-6 rounded-full bg-stone-300 dark:bg-stone-700 font-bold text-[10px] flex items-center justify-center text-stone-700 dark:text-stone-200">
+          SC
+        </div>
+        <div class="truncate leading-tight">
+          <p class="font-semibold text-stone-800 dark:text-white truncate">Sanshray Choudhary</p>
+          <p class="text-[10px] text-stone-400">USICT ECE '27</p>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Viewport Canvas -->
+  <div class="flex-1 flex flex-col overflow-hidden relative">
+
+    <!-- VIEW 1: DASHBOARD (Exact Replica of frame 24 in video) -->
+    <main id="view-dashboard" class="flex-1 overflow-y-auto p-8 max-w-6xl mx-auto w-full space-y-8">
+      
+      <!-- Greeting Banner -->
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-dossier-serif text-3xl font-medium tracking-tight text-[#1c1917] dark:text-white">Good evening, Sanshray</h2>
+          <p class="text-xs text-stone-500 dark:text-stone-400 mt-1">Here is where your job applications and overnight discovery stand.</p>
+        </div>
+        <button onclick="triggerHunterScan()" id="hunter-btn-dash" class="flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 text-xs font-semibold shadow-sm transition">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i>
+          <span>Run Job Agent Now</span>
+        </button>
+      </div>
+
+      <!-- Funnel: Where things stand -->
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-semibold text-stone-800 dark:text-stone-200">Where things stand</h3>
+          <button onclick="navigateView('applications')" class="text-xs font-medium text-stone-500 hover:text-stone-800 dark:hover:text-white flex items-center gap-1">
+            Open board <i data-lucide="arrow-right" class="w-3 h-3"></i>
+          </button>
+        </div>
+
+        <!-- Color Funnel Bar -->
+        <div class="h-2.5 rounded-full overflow-hidden flex bg-stone-100 dark:bg-stone-800 mb-5">
+          <div class="bg-stone-400 w-1/4" title="Draft"></div>
+          <div class="bg-sky-500 w-1/4" title="Applied"></div>
+          <div class="bg-purple-500 w-1/6" title="Screening"></div>
+          <div class="bg-amber-500 w-1/6" title="Interview"></div>
+          <div class="bg-emerald-500 w-1/6" title="Offer"></div>
+        </div>
+
+        <!-- Funnel Counts Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 text-xs">
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-stone-400 flex items-center gap-1.5">● Draft</span>
+            <span id="count-draft" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-sky-500 flex items-center gap-1.5">● Applied</span>
+            <span id="count-applied" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-purple-500 flex items-center gap-1.5">● Screening</span>
+            <span id="count-screening" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-amber-500 flex items-center gap-1.5">● Interview</span>
+            <span id="count-interview" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-emerald-500 flex items-center gap-1.5">● Offer</span>
+            <span id="count-offer" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+          <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800">
+            <span class="text-rose-400 flex items-center gap-1.5">● Rejected</span>
+            <span id="count-rejected" class="text-lg font-bold text-stone-800 dark:text-white mt-1 block">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Worth a look: High matches -->
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm">
+        <h3 class="text-sm font-semibold text-stone-800 dark:text-stone-200 mb-3">Worth a look · High Match Positions</h3>
+        <div id="worth-a-look-list" class="divide-y divide-stone-100 dark:divide-stone-800">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW 2: APPLICATIONS KANBAN BOARD -->
+    <main id="view-applications" class="hidden flex-1 flex flex-col p-6 overflow-hidden">
+      <div class="flex items-center justify-between mb-4 shrink-0">
+        <div>
+          <h2 class="font-dossier-serif text-2xl font-medium tracking-tight text-[#1c1917] dark:text-white">Applications Board</h2>
+          <p class="text-xs text-stone-500">Track and manage every tailored application from draft to offer.</p>
+        </div>
+      </div>
+
+      <!-- Kanban Columns -->
+      <div class="flex-1 overflow-x-auto flex gap-4 pb-4">
+        <!-- Draft Column -->
+        <div class="w-80 shrink-0 bg-[#f4efe6]/50 dark:bg-stone-900/40 rounded-xl p-3 border border-[#eae6df] dark:border-stone-800 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-200 dark:border-stone-800">
+            <span class="text-xs font-bold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-stone-400"></span> Draft
+            </span>
+            <span id="kanban-count-draft" class="text-xs text-stone-400 font-semibold">0</span>
+          </div>
+          <div id="col-draft" class="flex-1 overflow-y-auto space-y-2.5"></div>
+        </div>
+
+        <!-- Applied Column -->
+        <div class="w-80 shrink-0 bg-[#f4efe6]/50 dark:bg-stone-900/40 rounded-xl p-3 border border-[#eae6df] dark:border-stone-800 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-200 dark:border-stone-800">
+            <span class="text-xs font-bold text-sky-700 dark:text-sky-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-sky-500"></span> Applied
+            </span>
+            <span id="kanban-count-applied" class="text-xs text-stone-400 font-semibold">0</span>
+          </div>
+          <div id="col-applied" class="flex-1 overflow-y-auto space-y-2.5"></div>
+        </div>
+
+        <!-- Screening Column -->
+        <div class="w-80 shrink-0 bg-[#f4efe6]/50 dark:bg-stone-900/40 rounded-xl p-3 border border-[#eae6df] dark:border-stone-800 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-200 dark:border-stone-800">
+            <span class="text-xs font-bold text-purple-700 dark:text-purple-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span> Screening
+            </span>
+            <span id="kanban-count-screening" class="text-xs text-stone-400 font-semibold">0</span>
+          </div>
+          <div id="col-screening" class="flex-1 overflow-y-auto space-y-2.5"></div>
+        </div>
+
+        <!-- Interview Column -->
+        <div class="w-80 shrink-0 bg-[#f4efe6]/50 dark:bg-stone-900/40 rounded-xl p-3 border border-[#eae6df] dark:border-stone-800 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-200 dark:border-stone-800">
+            <span class="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-amber-500"></span> Interview
+            </span>
+            <span id="kanban-count-interview" class="text-xs text-stone-400 font-semibold">0</span>
+          </div>
+          <div id="col-interview" class="flex-1 overflow-y-auto space-y-2.5"></div>
+        </div>
+
+        <!-- Offer Column -->
+        <div class="w-80 shrink-0 bg-[#f4efe6]/50 dark:bg-stone-900/40 rounded-xl p-3 border border-[#eae6df] dark:border-stone-800 flex flex-col">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-stone-200 dark:border-stone-800">
+            <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Offer
+            </span>
+            <span id="kanban-count-offer" class="text-xs text-stone-400 font-semibold">0</span>
+          </div>
+          <div id="col-offer" class="flex-1 overflow-y-auto space-y-2.5"></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- VIEW 3: APPLICATION DETAIL VIEW (Exact Dossier Split View with "Refine with AI") -->
+    <main id="view-application-detail" class="hidden flex-1 flex flex-col overflow-hidden bg-[#fbfaf8] dark:bg-[#121212]">
+      
+      <!-- Top Action Bar -->
+      <div class="px-6 py-3 border-b border-[#eae6df] dark:border-[#262624] bg-white dark:bg-[#171716] flex items-center justify-between shrink-0">
+        <div class="flex items-center gap-3">
+          <button onclick="navigateView('applications')" class="text-xs text-stone-400 hover:text-stone-800 dark:hover:text-white flex items-center gap-1">
+            <i data-lucide="chevron-left" class="w-4 h-4"></i> Back
+          </button>
+          <span class="text-stone-300">/</span>
+          <h2 id="app-title-role" class="font-dossier-serif text-lg font-medium text-[#1c1917] dark:text-white">Role</h2>
+          <span class="text-stone-400">·</span>
+          <span id="app-title-company" class="text-sm font-semibold text-stone-600 dark:text-stone-300">Company</span>
+          <span id="app-seniority-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-semibold border border-amber-200 dark:border-amber-900">Experience</span>
+
+          <!-- Status Dropdown -->
+          <select id="app-status-select" onchange="changeStatus(this.value)" class="ml-2 text-xs font-semibold px-2.5 py-1 rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 focus:outline-none cursor-pointer">
+            <option value="Draft">Draft</option>
+            <option value="Applied">Applied</option>
+            <option value="Screening">Screening</option>
+            <option value="Interview">Interview</option>
+            <option value="Offer">Offer</option>
+            <option value="Rejected">Rejected</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <a id="app-ats-link" href="#" target="_blank" class="px-3.5 py-1.5 rounded-lg border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-semibold hover:bg-emerald-100 dark:hover:bg-emerald-900/50 flex items-center gap-1.5 transition shadow-sm">
+            <i data-lucide="external-link" class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"></i>
+            <span id="app-ats-link-text">Open Direct Requisition</span>
+          </a>
+
+          <a id="app-download-resume" href="#" target="_blank" class="px-3.5 py-1.5 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:hover:bg-stone-100 dark:text-[#1c1917] text-white text-xs font-semibold flex items-center gap-1.5 shadow-sm transition">
+            <i data-lucide="download" class="w-3.5 h-3.5"></i>
+            <span>Resume PDF</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Detail Sub-Navigation Tabs -->
+      <div class="px-6 flex border-b border-[#eae6df] dark:border-[#262624] bg-white dark:bg-[#171716] gap-6 text-xs font-medium text-stone-500 shrink-0">
+        <button onclick="switchAppTab('resume')" id="app-tab-resume" class="py-2.5 border-b-2 border-[#1c1917] dark:border-white text-[#1c1917] dark:text-white font-semibold flex items-center gap-1.5">
+          Resume
+        </button>
+        <button onclick="switchAppTab('cover')" id="app-tab-cover" class="py-2.5 border-b-2 border-transparent hover:text-stone-800 dark:hover:text-white flex items-center gap-1.5">
+          Cover letter
+        </button>
+        <button onclick="switchAppTab('analysis')" id="app-tab-analysis" class="py-2.5 border-b-2 border-transparent hover:text-stone-800 dark:hover:text-white flex items-center gap-1.5">
+          Match report <span id="app-match-badge" class="px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold">100%</span>
+        </button>
+        <button onclick="switchAppTab('posting')" id="app-tab-posting" class="py-2.5 border-b-2 border-transparent hover:text-stone-800 dark:hover:text-white flex items-center gap-1.5">
+          Job posting
+        </button>
+      </div>
+
+      <!-- Split Layout: Document Canvas (Left) + Refine with AI Chat (Right) -->
+      <div class="flex-1 flex overflow-hidden">
+        
+        <!-- Left: Document Viewer Canvas -->
+        <div class="flex-1 overflow-y-auto p-6 flex justify-center bg-[#f4efe6]/40 dark:bg-black/20">
+          
+          <!-- Resume Tab -->
+          <div id="content-resume" class="w-full max-w-4xl h-full flex flex-col">
+            <iframe id="iframe-resume" src="" class="w-full h-full rounded-lg border border-stone-200 dark:border-stone-800 paper-sheet bg-white"></iframe>
+          </div>
+
+          <!-- Cover Letter Tab -->
+          <div id="content-cover" class="hidden w-full max-w-4xl h-full flex flex-col">
+            <iframe id="iframe-cover" src="" class="w-full h-full rounded-lg border border-stone-200 dark:border-stone-800 paper-sheet bg-white"></iframe>
+          </div>
+
+          <!-- Match Report Tab -->
+          <div id="content-analysis" class="hidden w-full max-w-3xl bg-white dark:bg-[#1a1a19] rounded-xl border border-stone-200 dark:border-stone-800 p-8 shadow-sm overflow-y-auto">
+            <div id="analysis-body" class="markdown-body"></div>
+          </div>
+
+          <!-- Job Posting Tab -->
+          <div id="content-posting" class="hidden w-full max-w-3xl bg-white dark:bg-[#1a1a19] rounded-xl border border-stone-200 dark:border-stone-800 p-8 shadow-sm overflow-y-auto">
+            <div id="posting-body" class="markdown-body"></div>
+          </div>
+
+        </div>
+
+        <!-- Right: "Refine with AI" Chat Panel (Exact Dossier Feature) -->
+        <aside class="w-80 border-l border-[#eae6df] dark:border-[#262624] bg-white dark:bg-[#171716] flex flex-col shrink-0 select-none">
+          <div class="p-3.5 border-b border-[#eae6df] dark:border-[#262624] flex items-center justify-between">
+            <span class="text-xs font-bold text-stone-800 dark:text-stone-200 flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i> Refine with AI
+            </span>
+            <span class="text-[10px] text-stone-400">Fact-Guard Active</span>
+          </div>
+
+          <!-- Quick Suggestion Chips -->
+          <div class="p-3 border-b border-stone-100 dark:border-stone-800/80 space-y-1.5">
+            <p class="text-[10px] text-stone-400 font-semibold uppercase tracking-wider">Suggested changes</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="sendQuickPrompt('Emphasize AtiDhwani ESP32-S3 and KiCad PCB')" class="text-[11px] px-2 py-1 rounded bg-[#f4efe6] dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 transition text-left">
+                Highlight AtiDhwani & KiCad
+              </button>
+              <button onclick="sendQuickPrompt('Lead with India Space Academy drone firmware')" class="text-[11px] px-2 py-1 rounded bg-[#f4efe6] dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 transition text-left">
+                Prioritize Drone Firmware
+              </button>
+              <button onclick="sendQuickPrompt('Make the summary more formal and concise')" class="text-[11px] px-2 py-1 rounded bg-[#f4efe6] dark:bg-stone-800 hover:bg-stone-200 text-stone-700 dark:text-stone-300 transition text-left">
+                Make summary concise
+              </button>
+            </div>
+          </div>
+
+          <!-- Chat Stream History -->
+          <div id="refine-chat-stream" class="flex-1 overflow-y-auto p-3 space-y-2.5 text-xs">
+            <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 text-stone-600 dark:text-stone-400">
+              Ask for changes to this tailored resume or cover letter. I'll only use facts from your master profile.
+            </div>
+          </div>
+
+          <!-- Chat Input -->
+          <div class="p-3 border-t border-[#eae6df] dark:border-[#262624]">
+            <form onsubmit="handleRefineSubmit(event)" class="relative">
+              <input type="text" id="refine-input" placeholder="e.g. Highlight CAN Bus & FreeRTOS..." class="w-full pl-3 pr-8 py-2 text-xs rounded-lg border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 focus:outline-none focus:ring-1 focus:ring-stone-400">
+              <button type="submit" class="absolute right-2 top-2 text-stone-400 hover:text-stone-800 dark:hover:text-white">
+                <i data-lucide="send" class="w-4 h-4"></i>
+              </button>
+            </form>
+          </div>
+        </aside>
+
+      </div>
+    </main>
+
+    <!-- VIEW 4: MASTER PROFILE & CREDENTIALS -->
+    <main id="view-profile" class="hidden flex-1 overflow-y-auto p-8 max-w-4xl mx-auto w-full space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-dossier-serif text-3xl font-medium tracking-tight text-[#1c1917] dark:text-white">Your Profile</h2>
+          <p class="text-xs text-stone-500 mt-1">Everything here feeds your resumes and cover letters. Fact Guard guarantees zero invented facts.</p>
+        </div>
+        <button onclick="saveProfile()" class="px-4 py-2 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:text-[#1c1917] text-white text-xs font-semibold shadow-sm transition">
+          Save Changes
+        </button>
+      </div>
+
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm">
+        <textarea id="profile-text" class="w-full h-[600px] text-xs font-mono bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg p-4 leading-relaxed focus:outline-none"></textarea>
+      </div>
+    </main>
+
+    <!-- VIEW 5: BASE RESUME (LaTeX Preview & Themes) -->
+    <main id="view-resume" class="hidden flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-dossier-serif text-3xl font-medium tracking-tight text-[#1c1917] dark:text-white">Base Resume</h2>
+          <p class="text-xs text-stone-500 mt-1">Built straight from your LaTeX template. Every tailored application starts from here.</p>
+        </div>
+        <a href="/my%20CV/Sanshray_Choudhary_Updated_CV.pdf" target="_blank" class="px-4 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-xs font-semibold shadow-sm flex items-center gap-1.5">
+          <i data-lucide="download" class="w-3.5 h-3.5"></i> Download Base PDF
+        </a>
+      </div>
+
+      <div class="w-full h-[700px] bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-2 shadow-sm">
+        <iframe src="/my%20CV/Sanshray_Choudhary_Updated_CV.pdf" class="w-full h-full rounded-lg border-0"></iframe>
+      </div>
+    </main>
+
+    <!-- VIEW 6: PORTALS & SETTINGS (Dossier-Grade Niche ATS Settings) -->
+    <main id="view-settings" class="hidden flex-1 overflow-y-auto p-8 max-w-4xl mx-auto w-full space-y-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="font-dossier-serif text-3xl font-medium tracking-tight text-[#1c1917] dark:text-white">Portals & Settings</h2>
+          <p class="text-xs text-stone-500 mt-1">Connect niche ATS portals, configure API keys, and manage requisition filtering.</p>
+        </div>
+      </div>
+
+      <!-- Card: Connected Niche ATS Sources -->
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm space-y-5">
+        <h3 class="text-sm font-semibold text-stone-800 dark:text-stone-200">Connected Job Portals</h3>
+        
+        <div class="divide-y divide-stone-100 dark:divide-stone-800 text-xs">
+          <!-- FreeHire -->
+          <div class="py-3.5 flex items-start justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-stone-900 dark:text-white">FreeHire API</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">Active · Zero-Key</span>
+              </div>
+              <p class="text-stone-500">Live tech postings directly from company career pages: Workday, Comeet, Freshteam, and verified LinkedIn job posts.</p>
+            </div>
+            <span class="text-emerald-600 font-semibold flex items-center gap-1 shrink-0">
+              <i data-lucide="check-circle" class="w-4 h-4"></i> Connected
+            </span>
+          </div>
+
+          <!-- JSearch / OpenWeb Ninja -->
+          <div class="py-3.5 flex flex-col gap-2.5">
+            <div class="flex items-start justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-stone-900 dark:text-white">JSearch (OpenWeb Ninja / RapidAPI)</span>
+                  <span id="jsearch-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 font-semibold">Optional Key</span>
+                </div>
+                <p class="text-stone-500">Indexed postings from LinkedIn, Indeed, Glassdoor and Google for Jobs with direct ATS apply links.</p>
+              </div>
+              <span id="jsearch-status-text" class="text-stone-400 font-medium">Ready</span>
+            </div>
+            <div class="flex gap-2">
+              <input type="text" id="setting-jsearch-key" placeholder="Enter OpenWeb Ninja or RapidAPI key (optional)..." class="flex-1 p-2 text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 focus:outline-none">
+              <button onclick="saveJSearchKey()" class="px-3.5 py-1.5 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:text-[#1c1917] text-white text-xs font-semibold shadow-sm transition">
+                Save Key
+              </button>
+            </div>
+          </div>
+
+          <!-- Firecrawl -->
+          <div class="py-3.5 flex items-start justify-between">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-stone-900 dark:text-white">Firecrawl API</span>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">Configured</span>
+              </div>
+              <p class="text-stone-500">Corporate ATS deep crawler targeting verified requisition IDs (Siemens, Schneider, Honeywell, Rockwell).</p>
+            </div>
+            <span class="text-emerald-600 font-semibold flex items-center gap-1 shrink-0">
+              <i data-lucide="check-circle" class="w-4 h-4"></i> Connected
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Strict ATS Requisition Standards -->
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm space-y-3">
+        <h3 class="text-sm font-semibold text-stone-800 dark:text-stone-200">Requisition Quality Standard</h3>
+        <p class="text-xs text-stone-500 leading-relaxed">
+          <strong>Zero Generic Links:</strong> Every application in Dossier must link to a specific vacancy with an actionable application form or direct employer portal URL. Category hubs (e.g. <code class="text-[11px] bg-stone-100 dark:bg-stone-800 px-1 py-0.5 rounded">/jobs/</code> or <code class="text-[11px] bg-stone-100 dark:bg-stone-800 px-1 py-0.5 rounded">/remote/jobs/</code>) are systematically filtered out to prevent dead ends.
+        </p>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Modal: + New Application (Paste URL or Text) -->
+  <div id="new-app-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#1a1a19] border border-[#eae6df] dark:border-[#262624] rounded-xl shadow-2xl w-full max-w-xl p-6 space-y-4">
+      <div class="flex justify-between items-center pb-2 border-b border-stone-100 dark:border-stone-800">
+        <h3 class="font-dossier-serif text-xl font-medium">New Application</h3>
+        <button onclick="closeNewAppModal()" class="text-stone-400 hover:text-stone-600 dark:hover:text-white">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-semibold mb-1">Company</label>
+          <input type="text" id="new-app-company" placeholder="e.g. Siemens or Schneider Electric" class="w-full p-2 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Role Title</label>
+          <input type="text" id="new-app-role" placeholder="e.g. Senior Embedded Firmware Developer" class="w-full p-2 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Requisition URL (Optional)</label>
+          <input type="text" id="new-app-url" placeholder="https://jobs.siemens.com/..." class="w-full p-2 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900">
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Paste Job Description / Requirements</label>
+          <textarea id="new-app-text" rows="6" placeholder="Paste the job posting text here..." class="w-full p-2 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900"></textarea>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-2 border-t border-stone-100 dark:border-stone-800">
+        <button onclick="closeNewAppModal()" class="px-3.5 py-1.5 rounded-lg border border-stone-200 dark:border-stone-800 text-xs font-semibold">Cancel</button>
+        <button onclick="submitNewApp()" class="px-4 py-1.5 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:text-[#1c1917] text-white text-xs font-semibold shadow-sm">
+          Create Application →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let applications = [];
+    let currentApp = null;
+    let currentAppTab = 'resume';
+
+    async function init() {
+      await loadDashboard();
+      await loadApplications();
+      lucide.createIcons();
+    }
+
+    async function loadDashboard() {
+      const res = await fetch('/api/dashboard');
+      const data = await res.json();
+      
+      document.getElementById('count-draft').innerText = data.counts.Draft || 0;
+      document.getElementById('count-applied').innerText = data.counts.Applied || 0;
+      document.getElementById('count-screening').innerText = data.counts.Screening || 0;
+      document.getElementById('count-interview').innerText = data.counts.Interview || 0;
+      document.getElementById('count-offer').innerText = data.counts.Offer || 0;
+      document.getElementById('count-rejected').innerText = data.counts.Rejected || 0;
+
+      // Render worth a look
+      const container = document.getElementById('worth-a-look-list');
+      if (data.worth_a_look && data.worth_a_look.length > 0) {
+        container.innerHTML = data.worth_a_look.map(item => `
+          <div onclick="openApplicationDetail('${item.id}')" class="py-3 flex items-center justify-between cursor-pointer hover:bg-stone-50 dark:hover:bg-stone-900/50 px-2 rounded-lg transition">
+            <div class="flex items-center gap-3">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <div>
+                <p class="font-semibold text-xs text-[#1c1917] dark:text-white">${item.role} · <span class="font-normal text-stone-500">${item.company}</span></p>
+                <p class="text-[11px] text-stone-400">${item.location}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">${item.match_score}% Match</span>
+              <span class="text-xs text-stone-400 font-medium">Review →</span>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        container.innerHTML = `<p class="text-xs text-stone-400 py-3">No positions waiting for review.</p>`;
+      }
+    }
+
+    async function loadApplications() {
+      const res = await fetch('/api/applications');
+      const data = await res.json();
+      applications = data.applications || [];
+      document.getElementById('sidebar-app-count').innerText = applications.length;
+
+      renderKanban();
+    }
+
+    function renderKanban() {
+      const statuses = ['draft', 'applied', 'screening', 'interview', 'offer'];
+      statuses.forEach(s => {
+        const col = document.getElementById(`col-${s}`);
+        const count = document.getElementById(`kanban-count-${s}`);
+        const filtered = applications.filter(a => a.status.toLowerCase() === s);
+        
+        count.innerText = filtered.length;
+        col.innerHTML = filtered.map(app => {
+          let portalBadge = 'Direct ATS';
+          const u = app.url || '';
+          if (u.includes('myworkdayjobs.com')) portalBadge = 'Workday';
+          else if (u.includes('freshteam.com')) portalBadge = 'Freshteam';
+          else if (u.includes('careers.se.com')) portalBadge = 'Schneider ATS';
+          else if (u.includes('jobs.siemens.com')) portalBadge = 'Siemens ATS';
+          else if (u.includes('linkedin.com')) portalBadge = 'LinkedIn';
+          else if (u.includes('hirist.tech')) portalBadge = 'Verified ATS';
+
+          return `
+          <div onclick="openApplicationDetail('${app.id}')" class="p-3.5 bg-white dark:bg-[#1c1917] rounded-xl border border-stone-200/80 dark:border-stone-800 shadow-sm hover:shadow transition cursor-pointer">
+            <div class="flex justify-between items-start gap-2">
+              <h4 class="font-semibold text-xs text-stone-900 dark:text-white truncate">${app.role}</h4>
+              <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">${app.match_score}%</span>
+            </div>
+            <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
+              <p class="text-[11px] text-stone-500 truncate">${app.company}</p>
+              <span class="text-[9px] px-1 py-0.2 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 font-medium">${portalBadge}</span>
+              ${app.seniority ? `<span class="text-[9px] px-1 py-0.2 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-medium">${app.seniority}</span>` : ''}
+            </div>
+            <div class="mt-3 pt-2 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-[10px] text-stone-400">
+              <span>${app.created_at ? app.created_at.slice(0,10) : 'Recent'}</span>
+              <span class="text-emerald-600 font-semibold flex items-center gap-0.5">
+                <i data-lucide="check" class="w-3 h-3"></i> Fact Guarded
+              </span>
+            </div>
+          </div>
+        `;
+        }).join('');
+      });
+      lucide.createIcons();
+    }
+
+    function navigateView(viewName) {
+      const views = ['dashboard', 'applications', 'application-detail', 'profile', 'resume', 'settings'];
+      views.forEach(v => {
+        const el = document.getElementById(`view-${v}`);
+        const navEl = document.getElementById(`nav-${v}`);
+        if (el) el.classList.add('hidden');
+        if (navEl) {
+          navEl.classList.remove('bg-[#ede8e0]', 'dark:bg-stone-800', 'font-semibold');
+        }
+      });
+
+      const target = document.getElementById(`view-${viewName}`);
+      if (target) target.classList.remove('hidden');
+
+      const targetNav = document.getElementById(`nav-${viewName}`);
+      if (targetNav) {
+        targetNav.classList.add('bg-[#ede8e0]', 'dark:bg-stone-800', 'font-semibold');
+      }
+
+      if (viewName === 'profile') loadProfileData();
+      if (viewName === 'settings') loadSettings();
+    }
+
+    function openApplicationDetail(appId) {
+      currentApp = applications.find(a => a.id === appId);
+      if (!currentApp) return;
+
+      navigateView('application-detail');
+
+      document.getElementById('app-title-role').innerText = currentApp.role;
+      document.getElementById('app-title-company').innerText = currentApp.company;
+      document.getElementById('app-status-select').value = currentApp.status || 'Draft';
+      document.getElementById('app-match-badge').innerText = `${currentApp.match_score}%`;
+      document.getElementById('app-seniority-badge').innerText = currentApp.seniority || 'Experience: Flexible';
+
+      const url = currentApp.url || '#';
+      document.getElementById('app-ats-link').href = url;
+      let label = 'Open Direct Requisition';
+      if (url.includes('myworkdayjobs.com')) label = 'Open Workday Requisition ↗';
+      else if (url.includes('freshteam.com')) label = 'Open Freshteam Requisition ↗';
+      else if (url.includes('careers.se.com')) label = 'Open Schneider ATS ↗';
+      else if (url.includes('jobs.siemens.com')) label = 'Open Siemens JobDetail ↗';
+      else if (url.includes('linkedin.com')) label = 'Open LinkedIn Requisition ↗';
+      else if (url.includes('hirist.tech')) label = 'Open Direct Requisition ↗';
+      document.getElementById('app-ats-link-text').innerText = label;
+
+      document.getElementById('app-download-resume').href = `/api/applications/${currentApp.id}/resume.pdf`;
+
+      // Update iframes
+      document.getElementById('iframe-resume').src = `/api/applications/${currentApp.id}/resume.pdf#toolbar=1`;
+      document.getElementById('iframe-cover').src = `/api/applications/${currentApp.id}/cover_letter.pdf#toolbar=1`;
+
+      // Update markdowns
+      document.getElementById('analysis-body').innerHTML = marked.parse(currentApp.match_analysis_md || "No analysis available.");
+      document.getElementById('posting-body').innerHTML = marked.parse(currentApp.job_description_md || "No job posting text available.");
+
+      // Load Refine history
+      renderRefineChat();
+    }
+
+    async function loadSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const data = await res.json();
+        if (data.jsearch_connected) {
+          document.getElementById('jsearch-badge').innerText = 'Connected';
+          document.getElementById('jsearch-badge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold';
+          document.getElementById('jsearch-status-text').innerHTML = '<span class="text-emerald-600 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Connected</span>';
+        }
+        document.getElementById('setting-jsearch-key').value = data.jsearch_api_key || '';
+        lucide.createIcons();
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    async function saveJSearchKey() {
+      const key = document.getElementById('setting-jsearch-key').value.trim();
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsearch_api_key: key })
+      });
+      alert('Settings saved successfully!');
+      loadSettings();
+    }
+
+    function switchAppTab(tab) {
+      currentAppTab = tab;
+      const tabs = ['resume', 'cover', 'analysis', 'posting'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`app-tab-${t}`);
+        const content = document.getElementById(`content-${t}`);
+        if (t === tab) {
+          btn.classList.add('border-[#1c1917]', 'dark:border-white', 'text-[#1c1917]', 'dark:text-white', 'font-semibold');
+          btn.classList.remove('border-transparent');
+          content.classList.remove('hidden');
+        } else {
+          btn.classList.remove('border-[#1c1917]', 'dark:border-white', 'text-[#1c1917]', 'dark:text-white', 'font-semibold');
+          btn.classList.add('border-transparent');
+          content.classList.add('hidden');
+        }
+      });
+    }
+
+    async function changeStatus(newStatus) {
+      if (!currentApp) return;
+      await fetch(`/api/applications/${currentApp.id}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      });
+      currentApp.status = newStatus;
+      await loadDashboard();
+      renderKanban();
+    }
+
+    async function handleRefineSubmit(e) {
+      e.preventDefault();
+      const input = document.getElementById('refine-input');
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      await sendRefine(text);
+    }
+
+    function sendQuickPrompt(prompt) {
+      sendRefine(prompt);
+    }
+
+    async function sendRefine(instruction) {
+      if (!currentApp) return;
+      
+      const chat = document.getElementById('refine-chat-stream');
+      chat.innerHTML += `
+        <div class="p-2 rounded-lg bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-white text-right">
+          ${instruction}
+        </div>
+        <div id="ai-loading" class="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+          <i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> Re-compiling LaTeX & Fact-Guarding...
+        </div>
+      `;
+      chat.scrollTop = chat.scrollHeight;
+      lucide.createIcons();
+
+      try {
+        const res = await fetch(`/api/applications/${currentApp.id}/refine`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ instruction })
+        });
+        const data = await res.json();
+        
+        document.getElementById('ai-loading')?.remove();
+        chat.innerHTML += `
+          <div class="p-2.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200">
+            ✓ Done. ${data.message || 'Updated tailored resume and cover letter.'}
+          </div>
+        `;
+        chat.scrollTop = chat.scrollHeight;
+
+        // Reload iframes with cachebuster
+        const t = Date.now();
+        document.getElementById('iframe-resume').src = `/api/applications/${currentApp.id}/resume.pdf?t=${t}#toolbar=1`;
+        document.getElementById('iframe-cover').src = `/api/applications/${currentApp.id}/cover_letter.pdf?t=${t}#toolbar=1`;
+      } catch (e) {
+        document.getElementById('ai-loading')?.remove();
+        alert("Error refining document");
+      }
+    }
+
+    function renderRefineChat() {
+      const chat = document.getElementById('refine-chat-stream');
+      chat.innerHTML = `
+        <div class="p-2.5 rounded-lg bg-stone-50 dark:bg-stone-900 border border-stone-200/60 dark:border-stone-800 text-stone-600 dark:text-stone-400">
+          Ask for changes to this tailored resume or cover letter. I'll only use facts from your master profile.
+        </div>
+      `;
+    }
+
+    async function loadProfileData() {
+      const res = await fetch('/api/profile');
+      const data = await res.json();
+      document.getElementById('profile-text').value = data.content || '';
+    }
+
+    async function saveProfile() {
+      const content = document.getElementById('profile-text').value;
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content })
+      });
+      alert("Profile saved successfully!");
+    }
+
+    function openNewAppModal() {
+      document.getElementById('new-app-modal').classList.remove('hidden');
+    }
+
+    function closeNewAppModal() {
+      document.getElementById('new-app-modal').classList.add('hidden');
+    }
+
+    async function submitNewApp() {
+      const company = document.getElementById('new-app-company').value.trim();
+      const role = document.getElementById('new-app-role').value.trim();
+      const url = document.getElementById('new-app-url').value.trim();
+      const text = document.getElementById('new-app-text').value.trim();
+
+      if (!company || !role) {
+        alert("Company and Role are required.");
+        return;
+      }
+
+      closeNewAppModal();
+      alert("Drafting tailored LaTeX resume & cover letter. This takes ~5 seconds...");
+
+      const res = await fetch('/api/new-application', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ company, role, url, posting_text: text })
+      });
+      const data = await res.json();
+      
+      await loadApplications();
+      await loadDashboard();
+      if (data.application_id) {
+        openApplicationDetail(data.application_id);
+      }
+    }
+
+    async function triggerHunterScan() {
+      const btn = document.getElementById('hunter-btn-dash');
+      btn.disabled = true;
+      btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i> Scanning ATS...`;
+      lucide.createIcons();
+
+      await fetch('/api/run-hunter', { method: 'POST' });
+      
+      const poll = setInterval(async () => {
+        const res = await fetch('/api/status');
+        const st = await res.json();
+        if (!st.active) {
+          clearInterval(poll);
+          btn.disabled = false;
+          btn.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-emerald-600"></i> Run Job Agent Now`;
+          lucide.createIcons();
+          await loadDashboard();
+          await loadApplications();
+        }
+      }, 3000);
+    }
+
+    function toggleDarkMode() {
+      document.documentElement.classList.toggle('dark');
+    }
+
+    // Boot
+    init();
+  </script>
+</body>
+</html>

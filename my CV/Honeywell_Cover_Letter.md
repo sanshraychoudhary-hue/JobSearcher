@@ -1,0 +1,29 @@
+**Sanshray Choudhary**
+sanshray.choudhary@gmail.com | +91 9810894391
+LinkedIn: linkedin.com/in/sanshray-choudhary-3591b9282
+GitHub: github.com/sanshraychoudhary-hue
+
+**Hiring Team**
+Honeywell Industrial Safety
+HW Camp II, RMZ Ecoworld
+Bangalore, KA, 560103, IN
+
+**Subject: Application for Embedded Engr I (Job ID: 156905)**
+
+Dear Hiring Manager,
+
+I am writing to express my strong interest in the Embedded Engr I position within Honeywell’s Industrial Safety Engineering group in Bangalore. With a deep focus on embedded systems, FPGA-based control, and sensor integration, I am eager to contribute to Honeywell’s mission of developing safety-critical gas and flame detection products.
+
+During my B.Tech in Electronics and Communication Engineering at USICT, GGSIPU, I have cultivated a deep proficiency in C, C++, and Python for embedded environments. My work involves designing hardware and writing custom firmware for ARM Cortex-M microcontrollers (STM32, ESP32) using cross-compilers like IAR Embedded Workbench, where I regularly implement wired communication protocols like SPI, I2C, and UART. 
+
+I have a strong background in environmental sensing and safety devices. I recently engineered an **STM32 Industrial IoT Sensor Hub**, designing high-performance sensor nodes interfacing with SPI-based ADCs and implementing lightweight FreeRTOS firmware to manage concurrent sensor sampling. I also developed **Aegis Guardian**, a wearable safety device integrating 50Hz sensor acquisition and multi-model machine learning inference pipelines for real-time health monitoring and fall detection. Additionally, my work on the **Aero** (AI-driven IoT air quality monitoring) project directly aligns with Honeywell's focus on environmental monitoring, hazard mitigation, and life protection.
+
+Your requirement for FPGA-based data acquisition and signal processing closely matches my practical experience in hardware description languages and control systems. I am currently developing an FPGA-based real-time digital control system using Verilog RTL. Furthermore, my work on **Esperdyne**, an open-source handheld dual-channel ultrasonic heterodyne bat detector, heavily involved complex signal integrity requirements, analog modulation circuitry, and signal processing workflows. Through these designs, I have become highly proficient in applying advanced mathematical concepts, FFT-based filtering, and statistical analysis using tools like MATLAB and Python.
+
+Honeywell’s legacy of innovation in the industrial safety sector is deeply inspiring. I am eager to bring my background in embedded firmware, rapid hardware prototyping, and laser driver control systems to your team to help build the next generation of highly reliable detection products that adhere to strict functional safety requirements (such as IEC 61508 SIL 2).
+
+Thank you for your time and consideration. I have attached my resume for further review and look forward to the possibility of discussing how my skills and engineering background align with the needs of Honeywell.
+
+Sincerely,
+
+**Sanshray Choudhary**

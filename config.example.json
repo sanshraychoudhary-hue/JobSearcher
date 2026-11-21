@@ -1,0 +1,34 @@
+{
+  "firecrawl_api_key": "YOUR_FIRECRAWL_API_KEY",
+  "jsearch_api_key": "YOUR_OPTIONAL_OPENWEBNINJA_OR_RAPIDAPI_KEY",
+  "portals": {
+    "freehire": true,
+    "jsearch": true,
+    "firecrawl": true
+  },
+  "candidate_name": "Your Name",
+  "candidate_email": "your.email@example.com",
+  "candidate_phone": "+91 0000000000",
+  "target_companies": [
+    "Siemens",
+    "Honeywell",
+    "Schneider Electric",
+    "Rockwell Automation"
+  ],
+  "target_roles": [
+    "Embedded Systems Engineer",
+    "Firmware Engineer",
+    "Robotics Engineer"
+  ],
+  "locations": [
+    "India",
+    "Remote"
+  ],
+  "min_match_score": 65,
+  "max_daily_drafts": 5,
+  "schedule": {
+    "enabled": true,
+    "hour": 3,
+    "timezone": "Asia/Kolkata"
+  }
+}
