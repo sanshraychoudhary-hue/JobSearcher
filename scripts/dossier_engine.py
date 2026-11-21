@@ -13,7 +13,7 @@ from typing import Dict, Any, List
 
 from fact_guard import FactGuard
 from latex_builder import build_tailored_resume_tex, build_cover_letter_tex, compile_latex
-from ai_brain import synthesize_ai_cover_letter, get_gemini_api_key
+from ai_brain import synthesize_ai_cover_letter, get_gemini_api_key, refine_with_gemini
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROFILE_PATH = os.path.join(BASE_DIR, "profile", "master_profile.md")
@@ -328,41 +328,54 @@ def refine_application(app_id: str, instruction: str) -> Dict[str, Any]:
         with open(desc_path, "r", encoding="utf-8") as f:
             job_desc = f.read()
 
-    # Rebuild tailored LaTeX with specific emphasis from the instruction
-    new_resume_tex = build_tailored_resume_tex({
-        "company": company,
-        "role": role,
-        "markdown": job_desc + " " + instruction
-    })
-    
-    resume_tex_path = os.path.join(app_dir, "tailored_resume.tex")
-    with open(resume_tex_path, "w", encoding="utf-8") as f:
-        f.write(new_resume_tex)
-    compile_latex(resume_tex_path, app_dir)
-
     profile_text = load_master_profile()
     fact_guard = FactGuard(profile_text)
 
-    # Re-synthesize tailored cover letter with AI
-    new_letter_body = synthesize_ai_cover_letter({
+    # Call Gemini Copilot
+    refine_result = refine_with_gemini({
         "company": company,
         "role": role,
-        "markdown": job_desc + "\nSpecific User Instruction: " + instruction
-    }, profile_text)
-    new_letter_tex = build_cover_letter_tex({
-        "company": company,
-        "role": role
-    }, custom_body=new_letter_body)
-    letter_tex_path = os.path.join(app_dir, "cover_letter.tex")
-    with open(letter_tex_path, "w", encoding="utf-8") as f:
-        f.write(new_letter_tex)
-    compile_latex(letter_tex_path, app_dir)
-    audit_report = fact_guard.audit(new_resume_tex + "\n" + new_letter_tex, job_desc)
-    
+        "job_description": job_desc
+    }, instruction, profile_text)
+
+    reply_message = refine_result.get("reply_message", f"Updated documents based on: '{instruction}'")
+    needs_doc_update = refine_result.get("needs_doc_update", True)
+    updated_body = refine_result.get("updated_cover_letter_body")
+
+    if needs_doc_update:
+        new_resume_tex = build_tailored_resume_tex({
+            "company": company,
+            "role": role,
+            "markdown": job_desc + " " + instruction
+        })
+        resume_tex_path = os.path.join(app_dir, "tailored_resume.tex")
+        with open(resume_tex_path, "w", encoding="utf-8") as f:
+            f.write(new_resume_tex)
+        compile_latex(resume_tex_path, app_dir)
+
+        if not updated_body:
+            updated_body = synthesize_ai_cover_letter({
+                "company": company,
+                "role": role,
+                "markdown": job_desc + "\nSpecific User Instruction: " + instruction
+            }, profile_text)
+        new_letter_tex = build_cover_letter_tex({
+            "company": company,
+            "role": role
+        }, custom_body=updated_body)
+        letter_tex_path = os.path.join(app_dir, "cover_letter.tex")
+        with open(letter_tex_path, "w", encoding="utf-8") as f:
+            f.write(new_letter_tex)
+        compile_latex(letter_tex_path, app_dir)
+        audit_report = fact_guard.audit(new_resume_tex + "\n" + new_letter_tex, job_desc)
+    else:
+        audit_report = {"status": "Verified"}
+
     # Record history
     history = meta.get("refine_history", [])
     history.append({
         "instruction": instruction,
+        "reply": reply_message,
         "applied_at": datetime.now().isoformat(),
         "fact_guard": audit_report["status"]
     })
@@ -372,7 +385,8 @@ def refine_application(app_id: str, instruction: str) -> Dict[str, Any]:
 
     return {
         "success": True,
-        "message": f"Successfully updated documents based on: '{instruction}'",
+        "message": reply_message,
+        "updated": needs_doc_update,
         "fact_guard": audit_report["status"]
     }
 

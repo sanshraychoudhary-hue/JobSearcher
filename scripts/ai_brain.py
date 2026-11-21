@@ -208,3 +208,89 @@ Write the tailored 3-paragraph body now:"""
         )
 
     return body
+
+
+def refine_with_gemini(app_data: Dict[str, Any], instruction: str, profile_text: str) -> Dict[str, Any]:
+    """
+    Interactive 'Refine with AI' copilot powered by Gemini 3.5 Flash Lite.
+    Understands greetings, answers questions, or refines LaTeX documents while respecting Fact Guard.
+    """
+    company = escape_latex(app_data.get("company", "Company"))
+    role = escape_latex(app_data.get("role", "Engineer"))
+    job_desc = app_data.get("job_description", "")
+    api_key = get_gemini_api_key()
+
+    if not api_key:
+        return {
+            "reply_message": f"Updated documents based on: '{instruction}'. (Tip: Connect Gemini API in Settings for a full conversational copilot)",
+            "needs_doc_update": True,
+            "updated_cover_letter_body": None
+        }
+
+    system_instruction = (
+        "You are the Dossier AI Copilot for candidate Sanshray Choudhary (USICT ECE student, GPA 8.42). "
+        "The user is viewing an application dossier for a specific company and role. "
+        "The user will send a chat message, instruction, or question in the 'Refine with AI' panel. "
+        "Analyze whether the input is a conversational greeting/question (e.g. 'yo', 'hello', 'what is this?', 'how do I match?') "
+        "or a specific document refinement instruction (e.g. 'highlight AtiDhwani', 'prioritize drone firmware', 'make summary concise'). "
+        "Strict Fact Guard: You may ONLY cite facts and metrics from the Master Profile (e.g. 192kHz/24-bit, 240MHz, 8.42 GPA, e-Yantra Level 3). "
+        "Return a valid JSON object matching the requested schema."
+    )
+
+    prompt = f"""Target Company: {company}
+Target Role: {role}
+Job Requisition Context:
+{job_desc[:1800]}
+
+Master Profile Facts:
+{profile_text[:2000]}
+
+User Chat Input:
+"{instruction}"
+
+Return a JSON object with:
+1. "reply_message": (string) A conversational, helpful, professional response to the user. If greeting, greet back and suggest 2-3 high-impact refinements for this specific company. If an edit was requested, concisely explain the specific technical changes made to the cover letter or resume.
+2. "needs_doc_update": (boolean) False if the input is purely conversational/question, True if documents should be re-compiled.
+3. "updated_cover_letter_body": (string or null) If needs_doc_update is True, provide the updated 3 body paragraphs in clean LaTeX format (using \\textbf{{}}, \\,, etc.). If needs_doc_update is False, set to null.
+"""
+
+    model = "gemini-3.5-flash-lite"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_instruction}]},
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.25,
+            "maxOutputTokens": 2048
+        }
+    }
+
+    try:
+        res = requests.post(url, json=payload, timeout=20)
+        if res.status_code == 200:
+            raw_text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+            data = json.loads(raw_text)
+            body = data.get("updated_cover_letter_body")
+            if isinstance(body, list):
+                body = "\n\n".join(body)
+            if body:
+                body = re.sub(r"^```(?:latex|tex)?\s*", "", body, flags=re.MULTILINE)
+                body = re.sub(r"```$", "", body, flags=re.MULTILINE)
+                body = re.sub(r'(?<!\\)&', r'\&', body)
+            return {
+                "reply_message": data.get("reply_message", f"Updated application based on: '{instruction}'"),
+                "needs_doc_update": bool(data.get("needs_doc_update", False)),
+                "updated_cover_letter_body": body
+            }
+        else:
+            print(f"Gemini Refine error HTTP {res.status_code}: {res.text[:200]}")
+    except Exception as e:
+        print(f"Gemini Refine execution error: {e}")
+
+    return {
+        "reply_message": f"Applied changes for: '{instruction}'",
+        "needs_doc_update": True,
+        "updated_cover_letter_body": None
+    }
+
