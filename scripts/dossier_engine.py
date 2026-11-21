@@ -13,7 +13,7 @@ from typing import Dict, Any, List
 
 from fact_guard import FactGuard
 from latex_builder import build_tailored_resume_tex, build_cover_letter_tex, compile_latex
-from ai_brain import synthesize_ai_cover_letter, get_gemini_api_key, refine_with_gemini
+from ai_brain import synthesize_ai_cover_letter, get_gemini_api_key, refine_with_gemini, brain_evaluate_match
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROFILE_PATH = os.path.join(BASE_DIR, "profile", "master_profile.md")
@@ -213,33 +213,44 @@ def process_candidate_dossier(candidate: Dict[str, Any], fact_guard: FactGuard, 
         f.write("## Original Posting Content\n\n")
         f.write(posting_md)
         
-    # 2. Match Analysis (Dossier-Style)
-    with open(os.path.join(app_dir, "match_analysis.md"), "w", encoding="utf-8") as f:
-        f.write(f"# Dossier Match Report: {company} -- {role}\n\n")
-        f.write(f"### Requirement Coverage Score: **{score}%**\n\n")
-        f.write("### 🎯 Matched Competencies Matrix\n")
-        f.write("| Required Competency | Verified Evidence in Sanshray's Profile |\n")
-        f.write("| :--- | :--- |\n")
-        for skill, evidence in match_result["matrix"].items():
-            f.write(f"| **{skill.title()}** | {evidence} |\n")
-        f.write("\n")
-        
-        f.write("### ⚠️ Skill Gaps (Not explicitly detailed in profile)\n")
-        if match_result["gaps"]:
-            for g in match_result["gaps"]:
-                f.write(f"- *{g.title()}*\n")
-        else:
-            f.write("- *None detected. Full technical alignment.*\n")
-        f.write("\n")
-        
-        if match_result["red_flags"]:
-            f.write("### 🚩 Strategic Considerations / Red Flags\n")
-            for rf in match_result["red_flags"]:
-                f.write(f"- {rf}\n")
+    # 2. Match Analysis (Evaluated by Gemini 3.5 Flash Lite if available)
+    gemini_eval = brain_evaluate_match({
+        "company": company,
+        "role": role,
+        "markdown": posting_md
+    }, profile_text)
+
+    if gemini_eval:
+        score = gemini_eval["score"]
+        with open(os.path.join(app_dir, "match_analysis.md"), "w", encoding="utf-8") as f:
+            f.write(gemini_eval["report_md"])
+    else:
+        with open(os.path.join(app_dir, "match_analysis.md"), "w", encoding="utf-8") as f:
+            f.write(f"# Dossier Match Report: {company} -- {role}\n\n")
+            f.write(f"### Requirement Coverage Score: **{score}%**\n\n")
+            f.write("### 🎯 Matched Competencies Matrix\n")
+            f.write("| Required Competency | Verified Evidence in Sanshray's Profile |\n")
+            f.write("| :--- | :--- |\n")
+            for skill, evidence in match_result["matrix"].items():
+                f.write(f"| **{skill.title()}** | {evidence} |\n")
             f.write("\n")
             
-        f.write("### 💡 Interview & Positioning Strategy\n")
-        f.write(f"Lead with **AtiDhwani** (ESP32-S3, KiCad PCB, FreeRTOS, DSP) and **STM32 Sensor Hub** to demonstrate production-grade firmware rigor. Emphasize IIT Bombay e-Yantra certifications to highlight proven robotics & embedded mastery.\n")
+            f.write("### ⚠️ Skill Gaps (Not explicitly detailed in profile)\n")
+            if match_result["gaps"]:
+                for g in match_result["gaps"]:
+                    f.write(f"- *{g.title()}*\n")
+            else:
+                f.write("- *None detected. Full technical alignment.*\n")
+            f.write("\n")
+            
+            if match_result["red_flags"]:
+                f.write("### 🚩 Strategic Considerations / Red Flags\n")
+                for rf in match_result["red_flags"]:
+                    f.write(f"- {rf}\n")
+                f.write("\n")
+                
+            f.write("### 💡 Interview & Positioning Strategy\n")
+            f.write(f"Lead with **AtiDhwani** (ESP32-S3, KiCad PCB, FreeRTOS, DSP) and **STM32 Sensor Hub** to demonstrate production-grade firmware rigor. Emphasize IIT Bombay e-Yantra certifications to highlight proven robotics & embedded mastery.\n")
 
     # 3. Generate LaTeX Resume & Compile PDF
     resume_tex_content = build_tailored_resume_tex({

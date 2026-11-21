@@ -294,3 +294,83 @@ Return a JSON object with:
         "updated_cover_letter_body": None
     }
 
+
+def brain_evaluate_match(job_info: Dict[str, Any], profile_text: str) -> Optional[Dict[str, Any]]:
+    """
+    Evaluates candidate-to-job match semantically using Gemini 3.5 Flash Lite.
+    Returns:
+      - score: int (0-100)
+      - report_md: str
+    """
+    api_key = get_gemini_api_key()
+    if not api_key:
+        return None
+
+    company = escape_latex(job_info.get("company", "Company"))
+    role = escape_latex(job_info.get("role", "Engineer"))
+    posting_md = job_info.get("markdown", "") or job_info.get("description", "")
+
+    prompt = f"""You are the Dossier Strategic Talent Evaluator.
+Analyze the fit between candidate Sanshray Choudhary (USICT B.Tech ECE, GPA 8.42) and this target job opening.
+
+Candidate Master Profile Ground Truth:
+{profile_text[:2500]}
+
+Job Requisition:
+Company: {company}
+Role: {role}
+Posting Content:
+{posting_md[:3000]}
+
+Return a JSON object:
+{{
+  "score": (integer 0-100 representing realistic match strength),
+  "strengths": [list of 3 distinct technical strengths directly matching JD requirements],
+  "gaps": [list of 1-3 genuine experience or technical gaps mentioned in the JD],
+  "interview_strategy": (string: 2-3 sentences advising how the candidate should pitch their projects to defend these gaps during interviews)
+}}
+"""
+
+    model = "gemini-3.5-flash-lite"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "temperature": 0.2
+        }
+    }
+
+    try:
+        res = requests.post(url, json=payload, timeout=20)
+        if res.status_code == 200:
+            data = json.loads(res.json()["candidates"][0]["content"]["parts"][0]["text"])
+            score = int(data.get("score", 75))
+            strengths = data.get("strengths", [])
+            gaps = data.get("gaps", [])
+            strategy = data.get("interview_strategy", "")
+
+            md = f"# Dossier AI Match Report: {company} -- {role}\n\n"
+            md += f"### Semantic Match Score: **{score}%** *(Evaluated by Gemini 3.5 Flash Lite)*\n\n"
+            md += "### 🎯 Key Strengths & Technical Overlap\n"
+            for s in strengths:
+                md += f"- **{s}**\n"
+            md += "\n### ⚠️ Identified Gaps & Stretch Requirements\n"
+            for g in gaps:
+                md += f"- *{g}*\n"
+            md += "\n### 💡 Strategic Interview & Positioning Playbook\n"
+            md += f"{strategy}\n"
+
+            return {
+                "score": score,
+                "report_md": md,
+                "strengths": strengths,
+                "gaps": gaps,
+                "strategy": strategy
+            }
+    except Exception as e:
+        print(f"Gemini Match Evaluation error: {e}")
+
+    return None
+
+

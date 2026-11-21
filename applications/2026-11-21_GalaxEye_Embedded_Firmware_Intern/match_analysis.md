@@ -1,20 +1,15 @@
-# Dossier Match Report: GalaxEye -- Embedded Firmware Intern
+# Dossier AI Match Report: GalaxEye -- Embedded Firmware Intern
 
-### Requirement Coverage Score: **100%**
+### Semantic Match Score: **85%** *(Evaluated by Gemini 3.5 Flash Lite)*
 
-### 🎯 Matched Competencies Matrix
-| Required Competency | Verified Evidence in Sanshray's Profile |
-| :--- | :--- |
-| **Adc** | Documented in Master Profile & Projects |
-| **Gpio** | Documented in Master Profile & Projects |
-| **Firmware** | Documented in Master Profile & Projects |
-| **Robotics** | e-Yantra Level 3 Robotics & OmniServe Mobile Robot |
-| **Rtos** | Documented in Master Profile & Projects |
-| **Embedded** | Documented in Master Profile & Projects |
-| **C** | Core programming language for STM32, ESP32, and drone firmware |
+### 🎯 Key Strengths & Technical Overlap
+- **Extensive hands-on experience in developing low-level drivers and firmware from scratch for microcontrollers and SoCs (ADC, PWM, GPIO, Timers, UART, SPI, I2C, DMA).**
+- **Strong background in RTOS-based and multi-threaded systems (FreeRTOS) with acute optimization for CPU cycles and memory utilization under real-time constraints.**
+- **Solid hardware-software co-design skills including custom PCB design (KiCad), schematic reading, and board bring-up using oscilloscopes, logic analyzers, and JTAG.**
 
-### ⚠️ Skill Gaps (Not explicitly detailed in profile)
-- *None detected. Full technical alignment.*
+### ⚠️ Identified Gaps & Stretch Requirements
+- *Lack of explicit professional or project experience with AMD Zynq UltraScale SoCs and FPGA integration.*
+- *No direct mention of working with Yocto/PetaLinux build flows or Linux kernel compilation from scratch.*
 
-### 💡 Interview & Positioning Strategy
-Lead with **AtiDhwani** (ESP32-S3, KiCad PCB, FreeRTOS, DSP) and **STM32 Sensor Hub** to demonstrate production-grade firmware rigor. Emphasize IIT Bombay e-Yantra certifications to highlight proven robotics & embedded mastery.
+### 💡 Strategic Interview & Positioning Playbook
+Sanshray should emphasize his strong foundational expertise in ARM Cortex processors, bare-metal low-level driver development, and RTOS architecture to prove he can quickly ramp up on new SoCs like AMD Zynq. He can bridge the gap in Linux/Yocto and FPGA workflows by highlighting his academic background in VHDL/Verilog and his rapid adaptability demonstrated through complex multi-sensor hardware projects and national-level hackathons.
