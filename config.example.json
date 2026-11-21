@@ -1,4 +1,5 @@
 {
+  "gemini_api_key": "YOUR_GEMINI_API_KEY_OPTIONAL",
   "firecrawl_api_key": "YOUR_FIRECRAWL_API_KEY",
   "jsearch_api_key": "YOUR_OPTIONAL_OPENWEBNINJA_OR_RAPIDAPI_KEY",
   "portals": {

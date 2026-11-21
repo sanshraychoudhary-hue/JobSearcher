@@ -13,6 +13,7 @@ from typing import Dict, Any, List
 
 from fact_guard import FactGuard
 from latex_builder import build_tailored_resume_tex, build_cover_letter_tex, compile_latex
+from ai_brain import synthesize_ai_cover_letter, get_gemini_api_key
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROFILE_PATH = os.path.join(BASE_DIR, "profile", "master_profile.md")
@@ -251,11 +252,16 @@ def process_candidate_dossier(candidate: Dict[str, Any], fact_guard: FactGuard, 
         f.write(resume_tex_content)
     compile_latex(resume_tex_path, app_dir)
 
-    # 4. Generate LaTeX Cover Letter & Compile PDF
+    # 4. Generate AI-Synthesized LaTeX Cover Letter & Compile PDF
+    custom_letter_body = synthesize_ai_cover_letter({
+        "company": company,
+        "role": role,
+        "markdown": posting_md
+    }, profile_text)
     letter_tex_content = build_cover_letter_tex({
         "company": company,
         "role": role
-    })
+    }, custom_body=custom_letter_body)
     letter_tex_path = os.path.join(app_dir, "cover_letter.tex")
     with open(letter_tex_path, "w", encoding="utf-8") as f:
         f.write(letter_tex_content)
@@ -334,18 +340,23 @@ def refine_application(app_id: str, instruction: str) -> Dict[str, Any]:
         f.write(new_resume_tex)
     compile_latex(resume_tex_path, app_dir)
 
+    profile_text = load_master_profile()
+    fact_guard = FactGuard(profile_text)
+
+    # Re-synthesize tailored cover letter with AI
+    new_letter_body = synthesize_ai_cover_letter({
+        "company": company,
+        "role": role,
+        "markdown": job_desc + "\nSpecific User Instruction: " + instruction
+    }, profile_text)
     new_letter_tex = build_cover_letter_tex({
         "company": company,
         "role": role
-    })
+    }, custom_body=new_letter_body)
     letter_tex_path = os.path.join(app_dir, "cover_letter.tex")
     with open(letter_tex_path, "w", encoding="utf-8") as f:
         f.write(new_letter_tex)
     compile_latex(letter_tex_path, app_dir)
-
-    # Audit with Fact Guard
-    profile_text = load_master_profile()
-    fact_guard = FactGuard(profile_text)
     audit_report = fact_guard.audit(new_resume_tex + "\n" + new_letter_tex, job_desc)
     
     # Record history

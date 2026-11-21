@@ -242,6 +242,8 @@ def manage_settings():
             cfg["jsearch_api_key"] = data["jsearch_api_key"].strip()
         if "firecrawl_api_key" in data:
             cfg["firecrawl_api_key"] = data["firecrawl_api_key"].strip()
+        if "gemini_api_key" in data:
+            cfg["gemini_api_key"] = data["gemini_api_key"].strip()
             
         with open(CONFIG_PATH, "w", encoding="utf-8") as f:
             json.dump(cfg, f, indent=2)
@@ -255,6 +257,8 @@ def manage_settings():
         "firecrawl_connected": bool(cfg.get("firecrawl_api_key")),
         "jsearch_connected": bool(cfg.get("jsearch_api_key")),
         "jsearch_api_key": cfg.get("jsearch_api_key", ""),
+        "gemini_connected": bool(cfg.get("gemini_api_key")),
+        "gemini_api_key": cfg.get("gemini_api_key", ""),
         "freehire_connected": True,
         "config": cfg
     })

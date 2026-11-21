@@ -527,6 +527,26 @@
               <i data-lucide="check-circle" class="w-4 h-4"></i> Connected
             </span>
           </div>
+
+          <!-- Dossier AI Brain (Google Gemini LLM) -->
+          <div class="py-3.5 flex flex-col gap-2.5">
+            <div class="flex items-start justify-between">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-stone-900 dark:text-white">Dossier AI Brain (Google Gemini 2.0 Flash)</span>
+                  <span id="gemini-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 font-semibold">Ready</span>
+                </div>
+                <p class="text-stone-500">Powers intelligent job description comprehension, custom Fact-Guarded cover letters, and live document refinement.</p>
+              </div>
+              <span id="gemini-status-text" class="text-stone-400 font-medium">Heuristic Mode</span>
+            </div>
+            <div class="flex gap-2">
+              <input type="password" id="setting-gemini-key" placeholder="Enter Google Gemini API Key (from aistudio.google.com)..." class="flex-1 p-2 text-xs rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-900 focus:outline-none">
+              <button onclick="saveGeminiKey()" class="px-3.5 py-1.5 rounded-lg bg-[#1c1917] hover:bg-stone-800 dark:bg-white dark:text-[#1c1917] text-white text-xs font-semibold shadow-sm transition">
+                Save AI Key
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -745,6 +765,17 @@
           document.getElementById('jsearch-status-text').innerHTML = '<span class="text-emerald-600 font-semibold flex items-center gap-1"><i data-lucide="check" class="w-3.5 h-3.5"></i> Connected</span>';
         }
         document.getElementById('setting-jsearch-key').value = data.jsearch_api_key || '';
+
+        if (data.gemini_connected) {
+          document.getElementById('gemini-badge').innerText = 'Active LLM';
+          document.getElementById('gemini-badge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold';
+          document.getElementById('gemini-status-text').innerHTML = '<span class="text-emerald-600 font-semibold flex items-center gap-1"><i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Gemini 2.0 Active</span>';
+        } else {
+          document.getElementById('gemini-badge').innerText = 'Heuristic';
+          document.getElementById('gemini-badge').className = 'text-[10px] px-2 py-0.5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-600 font-semibold';
+          document.getElementById('gemini-status-text').innerHTML = '<span class="text-stone-400">Heuristic Mode</span>';
+        }
+        document.getElementById('setting-gemini-key').value = data.gemini_api_key || '';
         lucide.createIcons();
       } catch (e) {
         console.error(e);
@@ -759,6 +790,17 @@
         body: JSON.stringify({ jsearch_api_key: key })
       });
       alert('Settings saved successfully!');
+      loadSettings();
+    }
+
+    async function saveGeminiKey() {
+      const key = document.getElementById('setting-gemini-key').value.trim();
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gemini_api_key: key })
+      });
+      alert('AI Brain configuration saved!');
       loadSettings();
     }
 

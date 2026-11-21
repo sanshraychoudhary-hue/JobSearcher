@@ -211,12 +211,20 @@ def build_tailored_resume_tex(job_info: Dict[str, Any]) -> str:
 \end{{document}}"""
     return resume_tex
 
-def build_cover_letter_tex(job_info: Dict[str, Any]) -> str:
-    """Builds an elegant LaTeX cover letter."""
+def build_cover_letter_tex(job_info: Dict[str, Any], custom_body: Optional[str] = None) -> str:
+    """Builds an elegant LaTeX cover letter with either AI-custom body or domain-tailored content."""
     company = job_info.get("company", "Company")
     role = job_info.get("role", "Engineer")
     date_str = datetime.now().strftime("%B %d, %Y")
     
+    if custom_body and len(custom_body.strip()) > 50:
+        body_content = custom_body
+    else:
+        # Default fallback
+        body_content = rf"""\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. As an Electronics and Communication Engineering student at USICT (GPA 8.42) with extensive hands-on expertise in ARM Cortex/STM32 firmware, ESP32-S3 dual-core FreeRTOS architectures, and custom KiCad multi-layer PCB hardware development, I am eager to contribute to {company}'s industry-leading engineering initiatives. \vspace{{8pt}}\\%
+\noindent Through my flagship project \textbf{{AtiDhwani}}, I architected a low-cost bioacoustic monitoring system utilizing dual-core FreeRTOS on ESP32-S3, high-speed DMA I2S continuous sampling (192\,kHz / 24-bit), and real-time DSP with 128-point Radix-4 FFT spectral analysis. I also engineered the custom 2-layer carrier PCB in KiCad with 0 DRC violations, interfacing high-precision Wolfson stereo ADCs and TI DACs. In addition, my \textbf{{STM32 Industrial IoT Sensor Hub}} project demonstrated robust industrial telemetry over MQTT and SPI/I2C/UART sensor buses with power-optimized deep-sleep management. \vspace{{8pt}}\\%
+\noindent Having qualified Level 3 of IIT Bombay's e-Yantra Robotics Competition, earned official certifications in ROS 2 and Embedded Systems Developer from IIT Bombay, and developed drone firmware during my internship with India Space Academy, I thrive in fast-paced environments where software precision meets physical hardware constraints. \vspace{{8pt}}\\%"""
+
     letter_tex = rf"""\documentclass[10pt,a4paper]{{article}}%
 \usepackage[T1]{{fontenc}}%
 \usepackage[utf8]{{inputenc}}%
@@ -241,11 +249,7 @@ def build_cover_letter_tex(job_info: Dict[str, Any]) -> str:
 
 \noindent Dear Hiring Team at {company}, \vspace{{8pt}}\\%
 
-\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. As an Electronics and Communication Engineering student at USICT (GPA 8.42) with extensive hands-on expertise in ARM Cortex/STM32 firmware, ESP32-S3 dual-core FreeRTOS architectures, and custom KiCad multi-layer PCB hardware development, I am eager to contribute to {company}'s industry-leading engineering initiatives. \vspace{{8pt}}\\%
-
-\noindent Through my flagship project \textbf{{AtiDhwani}}, I architected a low-cost bioacoustic monitoring system utilizing dual-core FreeRTOS on ESP32-S3, high-speed DMA I2S continuous sampling (192\,kHz / 24-bit), and real-time DSP with 128-point Radix-4 FFT spectral analysis. I also engineered the custom 2-layer carrier PCB in KiCad with 0 DRC violations, interfacing high-precision Wolfson stereo ADCs and TI DACs. In addition, my \textbf{{STM32 Industrial IoT Sensor Hub}} project demonstrated robust industrial telemetry over MQTT and SPI/I2C/UART sensor buses with power-optimized deep-sleep management. \vspace{{8pt}}\\%
-
-\noindent Having qualified Level 3 of IIT Bombay's e-Yantra Robotics Competition, earned official certifications in ROS 2 and Embedded Systems Developer from IIT Bombay, and developed drone firmware during my internship with India Space Academy, I thrive in fast-paced environments where software precision meets physical hardware constraints. \vspace{{8pt}}\\%
+{body_content}
 
 \noindent {company}'s commitment to engineering excellence and technological innovation makes this role an ideal match for my technical background and professional aspirations. I welcome the opportunity to discuss how my embedded development, hardware debugging, and systems engineering skills can deliver immediate value to your team. \vspace{{8pt}}\\%
 
