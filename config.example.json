@@ -25,7 +25,7 @@
     "India",
     "Remote"
   ],
-  "min_match_score": 65,
+  "min_match_score": 20,
   "max_daily_drafts": 5,
   "schedule": {
     "enabled": true,

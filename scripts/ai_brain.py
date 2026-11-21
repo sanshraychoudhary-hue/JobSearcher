@@ -107,6 +107,9 @@ def synthesize_ai_cover_letter(job_info: Dict[str, Any], profile_text: str) -> s
             "NEVER invent GPA, dates, company names, or numbers. "
             "Paragraph 1: Express passion for the specific role at the company, connecting their core domain with Sanshray's relevant foundation. "
             "Paragraph 2: Deep dive into 1-2 flagship projects from his profile that directly solve the technical challenges mentioned in the JD. "
+            "If the role is an ambitious stretch role with only partial (e.g. 20-50%) skill overlap, DO NOT apologize or invent fake tools; "
+            "instead, position his verified foundational mastery (FreeRTOS, register-level bare-metal C/C++, high-speed DMA I2S, KiCad PCB bring-up) "
+            "as the technical bedrock that ensures rapid, reliable mastery of their proprietary environment. "
             "Paragraph 3: Highlight e-Yantra IIT Bombay achievements, drone firmware internship, certifications, and readiness to deliver immediate value. "
             "Output ONLY the raw body text in clean LaTeX formatting (using \\textbf{}, \\,, and standard LaTeX paragraphs separated by \\vspace{8pt}\\\\)."
         )
