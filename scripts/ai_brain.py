@@ -77,14 +77,25 @@ def call_gemini(prompt: str, system_instruction: str = "") -> Optional[str]:
     return None
 
 
+def escape_latex(text: str) -> str:
+    """Escapes special LaTeX characters in strings like company/role names."""
+    if not text:
+        return ""
+    text = re.sub(r'(?<!\\)&', r'\&', text)
+    text = re.sub(r'(?<!\\)%', r'\%', text)
+    text = re.sub(r'(?<!\\)\$', r'\$', text)
+    text = re.sub(r'(?<!\\)#', r'\#', text)
+    text = re.sub(r'(?<!\\)_', r'\_', text)
+    return text
+
 def synthesize_ai_cover_letter(job_info: Dict[str, Any], profile_text: str) -> str:
     """
     Synthesizes custom, persuasive cover letter body paragraphs
     specifically tailored to the company's tech stack, requirements, and mission.
     Strictly constrained by the candidate's master profile to eliminate hallucinations.
     """
-    company = job_info.get("company", "Company")
-    role = job_info.get("role", "Engineer")
+    company = escape_latex(job_info.get("company", "Company"))
+    role = escape_latex(job_info.get("role", "Engineer"))
     posting_md = job_info.get("markdown", "") or job_info.get("description", "")
 
     # Check if Gemini API is available

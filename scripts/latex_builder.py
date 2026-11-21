@@ -142,8 +142,8 @@ def build_tailored_resume_tex(job_info: Dict[str, Any]) -> str:
     # Take the top 5 most relevant projects for high impact
     top_projects_latex = "\n\n".join([p["latex"] for p in ranked_projects[:5]])
     
-    company = job_info.get("company", "Engineering Firm")
-    role = job_info.get("role", "Embedded Systems Engineer")
+    company = escape_latex(job_info.get("company", "Engineering Firm"))
+    role = escape_latex(job_info.get("role", "Embedded Systems Engineer"))
     
     resume_tex = rf"""\documentclass[10pt,a4paper]{{article}}%
 \usepackage[T1]{{fontenc}}%
@@ -211,10 +211,21 @@ def build_tailored_resume_tex(job_info: Dict[str, Any]) -> str:
 \end{{document}}"""
     return resume_tex
 
+def escape_latex(text: str) -> str:
+    """Escapes special LaTeX characters in strings like company/role names."""
+    if not text:
+        return ""
+    text = re.sub(r'(?<!\\)&', r'\&', text)
+    text = re.sub(r'(?<!\\)%', r'\%', text)
+    text = re.sub(r'(?<!\\)\$', r'\$', text)
+    text = re.sub(r'(?<!\\)#', r'\#', text)
+    text = re.sub(r'(?<!\\)_', r'\_', text)
+    return text
+
 def build_cover_letter_tex(job_info: Dict[str, Any], custom_body: Optional[str] = None) -> str:
     """Builds an elegant LaTeX cover letter with either AI-custom body or domain-tailored content."""
-    company = job_info.get("company", "Company")
-    role = job_info.get("role", "Engineer")
+    company = escape_latex(job_info.get("company", "Company"))
+    role = escape_latex(job_info.get("role", "Engineer"))
     date_str = datetime.now().strftime("%B %d, %Y")
     
     if custom_body and len(custom_body.strip()) > 50:
