@@ -9,5 +9,18 @@
   "title": "Embedded Software Developer - Kernel Development at Siemens",
   "created_at": "2026-11-21T23:14:42.528462",
   "fact_guard": "PASSED (Zero Hallucinated Metrics)",
-  "refine_history": []
+  "refine_history": [
+    {
+      "instruction": "yo",
+      "reply": "Hello! I'm your Dossier AI Copilot for Sanshray Choudhary. How can I help you tailor your application for the Embedded Software Developer - Kernel Development role at Siemens? We can highlight your experience with FreeRTOS, real-time systems, and industrial protocols like CAN and Modbus, or emphasize your 8.42 GPA and e-Yantra Level 3 certification from IIT Bombay. Let me know what you'd like to refine!",
+      "applied_at": "2026-11-22T00:52:37.575426",
+      "fact_guard": "Verified"
+    },
+    {
+      "instruction": "Highlight KiCad PCB design and zero DRC violations",
+      "reply": "I have updated the dossier to emphasize your custom PCB design expertise in KiCad, highlighting your ability to achieve zero DRC violations and rigorous hardware debugging for robust embedded architectures suitable for Siemens' industrial automation and substation systems.",
+      "applied_at": "2026-11-22T00:52:47.969000",
+      "fact_guard": "PASSED (Zero Hallucinated Metrics)"
+    }
+  ]
 }
