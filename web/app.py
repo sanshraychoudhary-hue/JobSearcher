@@ -9,7 +9,7 @@ import sys
 import json
 import threading
 from datetime import datetime
-from flask import Flask, render_template, jsonify, send_file, request
+from flask import Flask, render_template, jsonify, send_file, send_from_directory, request
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR, "scripts"))
@@ -189,6 +189,11 @@ def get_cover_letter_pdf(app_id):
     if os.path.exists(pdf_path):
         return send_file(pdf_path, mimetype="application/pdf")
     return "Cover Letter PDF not found", 404
+
+@app.route("/my CV/<path:filename>")
+def serve_cv_file(filename):
+    cv_dir = os.path.join(BASE_DIR, "my CV")
+    return send_from_directory(cv_dir, filename)
 
 @app.route("/api/new-application", methods=["POST"])
 def create_new_application():
