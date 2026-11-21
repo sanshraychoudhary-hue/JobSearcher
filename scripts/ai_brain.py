@@ -129,7 +129,24 @@ Write the tailored 3-paragraph body now:"""
     # Domain-Aware Intelligent Heuristic Router (Fallback when API key is pending)
     lower_jd = (posting_md + " " + role).lower()
 
-    if any(k in lower_jd for k in ["ros", "ros2", "robot", "robotics", "slam", "navigation", "autonomous"]):
+    # Category scoring to select the best match instead of arbitrary if/elif order
+    domains = {
+        "space_avionics": ["satellite", "space", "drone", "aerospace", "payload", "avionics", "uav", "flight", "spacecraft"],
+        "robotics_ros": ["ros", "ros2", "robot", "robotics", "slam", "navigation", "autonomous", "mecanum", "kinematics", "lidar"],
+        "iot_agri": ["iot", "sensor", "smart", "agri", "telemetry", "mqtt", "modbus", "rs485", "ambient", "dosing", "irrigation"],
+        "kernel_drivers": ["kernel", "driver", "bsp", "linux kernel", "device driver", "internals", "system software", "bare metal"]
+    }
+
+    scores = {}
+    for dom, kws in domains.items():
+        score = sum(len(re.findall(r'\b' + re.escape(kw) + r'\b', lower_jd)) for kw in kws)
+        scores[dom] = score
+
+    best_domain = max(scores, key=scores.get)
+    if scores[best_domain] == 0:
+        best_domain = "general_embedded"
+
+    if best_domain == "robotics_ros":
         # Robotics / ROS 2 Specialization
         body = (
             rf"\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. "
@@ -141,7 +158,7 @@ Write the tailored 3-paragraph body now:"""
             rf"\noindent With demonstrated expertise across C++, Python, Linux, and real-time microcontroller-to-host actuation buses, I thrive at the intersection of algorithmic motion control and physical hardware integration. "
             rf"I look forward to discussing how my robotics background and proven problem-solving drive can accelerate {company}'s engineering objectives. \vspace{{8pt}}\\"
         )
-    elif any(k in lower_jd for k in ["satellite", "space", "drone", "aerospace", "payload", "avionics", "uav"]):
+    elif best_domain == "space_avionics":
         # SpaceTech / Aerospace / Drone Firmware Specialization
         body = (
             rf"\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. "
@@ -153,7 +170,7 @@ Write the tailored 3-paragraph body now:"""
             rf"\noindent Having earned IIT Bombay certifications in Embedded Systems and ROS 2, I bring rigorous engineering discipline, bare-metal C/C++ precision, and rapid board bring-up capabilities to high-stakes electronic payloads. "
             rf"I welcome the opportunity to discuss how my technical skills can advance {company}'s next generation of systems. \vspace{{8pt}}\\"
         )
-    elif any(k in lower_jd for k in ["iot", "sensor", "smart", "agri", "telemetry", "mqtt", "modbus", "rs485", "industrial"]):
+    elif best_domain == "iot_agri":
         # Industrial IoT / Sensor Hub Specialization
         body = (
             rf"\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. "
@@ -164,7 +181,7 @@ Write the tailored 3-paragraph body now:"""
             rf"\noindent Certified as an Embedded Systems Developer by IIT Bombay and having qualified Level 3 of the e-Yantra Robotics Competition, I am proficient in bench-level debugging using oscilloscopes and logic analyzers, protocol validation (UART, SPI, I2C, Modbus), and modern Git workflows. "
             rf"I look forward to discussing how my embedded development and hardware bring-up capabilities can add immediate value to {company}. \vspace{{8pt}}\\"
         )
-    elif any(k in lower_jd for k in ["kernel", "driver", "bsp", "linux", "operating system", "device driver"]):
+    elif best_domain == "kernel_drivers":
         # Linux Kernel / Device Drivers / Low-Level Firmware Specialization
         body = (
             rf"\noindent I am writing to express my enthusiastic interest in the \textbf{{{role}}} position at \textbf{{{company}}}. "
