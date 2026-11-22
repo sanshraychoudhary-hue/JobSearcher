@@ -17,6 +17,7 @@ sys.path.insert(0, os.path.join(BASE_DIR, "scripts"))
 from dossier_engine import run_dossier_engine, refine_application, process_candidate_dossier
 from search_and_extract import discover_postings
 from fact_guard import FactGuard
+from ai_brain import train_preference_model, get_user_preference_profile, recalculate_all_affinities
 
 app = Flask(__name__, template_folder="templates")
 
@@ -107,12 +108,14 @@ def get_dashboard():
         counts[st] = counts.get(st, 0) + 1
 
     worth_a_look = [a for a in apps if a.get("match_score", 0) >= 80][:5]
+    pref_profile = get_user_preference_profile()
 
     return jsonify({
         "total": len(apps),
         "counts": counts,
         "worth_a_look": worth_a_look,
-        "recent": apps[:6]
+        "recent": apps[:6],
+        "preferences": pref_profile
     })
 
 @app.route("/api/applications", methods=["GET"])
@@ -167,6 +170,40 @@ def update_status(app_id):
             json.dump(meta, f, indent=2)
         return jsonify({"success": True, "status": new_status})
     return jsonify({"success": False, "error": "Not found"}), 404
+
+@app.route("/api/applications/<app_id>/rate", methods=["POST"])
+def rate_application(app_id):
+    rating = int(request.json.get("rating", 0))
+    folder_path = os.path.join(APPLICATIONS_DIR, app_id)
+    meta_path = os.path.join(folder_path, "meta.json")
+    if not os.path.exists(meta_path):
+        return jsonify({"success": False, "error": "Not found"}), 404
+
+    with open(meta_path, "r", encoding="utf-8") as f:
+        meta = json.load(f)
+
+    meta["user_rating"] = rating
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump(meta, f, indent=2)
+
+    # Re-train preference model using Gemini and recalculate affinities across all applications
+    profile = train_preference_model()
+
+    with open(meta_path, "r", encoding="utf-8") as f:
+        meta = json.load(f)
+
+    return jsonify({
+        "success": True,
+        "rating": rating,
+        "affinity_score": meta.get("affinity_score"),
+        "composite_score": meta.get("composite_score"),
+        "preference_profile": profile
+    })
+
+@app.route("/api/preferences", methods=["GET"])
+def get_preferences():
+    profile = get_user_preference_profile()
+    return jsonify(profile)
 
 @app.route("/api/applications/<app_id>/refine", methods=["POST"])
 def refine_app(app_id):

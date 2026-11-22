@@ -9,11 +9,14 @@ import os
 import json
 import re
 import requests
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.json")
 PROFILE_PATH = os.path.join(BASE_DIR, "profile", "master_profile.md")
+PREFERENCES_PATH = os.path.join(BASE_DIR, "data", "user_preferences.json")
+APPLICATIONS_DIR = os.path.join(BASE_DIR, "applications")
 
 
 def get_gemini_api_key() -> Optional[str]:
@@ -375,5 +378,167 @@ Return a JSON object:
         print(f"Gemini Match Evaluation error: {e}")
 
     return None
+
+
+def get_user_preference_profile() -> Dict[str, Any]:
+    """Loads the learned user preference profile from disk, or returns a baseline."""
+    if os.path.exists(PREFERENCES_PATH):
+        try:
+            with open(PREFERENCES_PATH, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {
+        "parameter_name": "Hands-on Deep-Tech & Prototyping Index",
+        "parameter_description": "Measures emphasis on autonomous systems, direct hardware/firmware prototyping, and technical ownership versus pure QA or documentation.",
+        "positive_signals": ["ROS 2", "Robotics", "Satellite", "Space", "Avionics", "KiCad", "PCB", "FreeRTOS", "STM32", "Firmware", "Autonomous"],
+        "negative_signals": ["Pure manual testing", "Documentation only", "Non-development QA", "Legacy IT maintenance", "Legacy enterprise reporting"],
+        "learned_taste_summary": "Sanshray strongly favors hands-on embedded systems, robotics, and hardware bring-up over routine testing or legacy support roles.",
+        "rated_count": 0,
+        "last_updated": None
+    }
+
+
+def score_job_affinity(job_info: Dict[str, Any], pref_profile: Dict[str, Any]) -> int:
+    """
+    Scores how well a job matches the user's learned preference parameter (0-100 scale).
+    """
+    text = (job_info.get("role", "") + " " + job_info.get("company", "") + " " + (job_info.get("markdown", "") or job_info.get("description", ""))).lower()
+    
+    pos_signals = pref_profile.get("positive_signals", [])
+    neg_signals = pref_profile.get("negative_signals", [])
+    
+    score = 65
+    for pos in pos_signals:
+        if pos.lower() in text:
+            score += 7
+    for neg in neg_signals:
+        if neg.lower() in text:
+            score -= 15
+            
+    return max(15, min(99, score))
+
+
+def recalculate_all_affinities(pref_profile: Dict[str, Any]):
+    """Updates meta.json across all applications with the new affinity score and composite score."""
+    if not os.path.exists(APPLICATIONS_DIR):
+        return
+    for folder in os.listdir(APPLICATIONS_DIR):
+        folder_path = os.path.join(APPLICATIONS_DIR, folder)
+        meta_path = os.path.join(folder_path, "meta.json")
+        if not os.path.exists(meta_path):
+            continue
+        try:
+            with open(meta_path, "r", encoding="utf-8") as f:
+                meta = json.load(f)
+            desc_path = os.path.join(folder_path, "job_description.md")
+            desc = ""
+            if os.path.exists(desc_path):
+                with open(desc_path, "r", encoding="utf-8") as df:
+                    desc = df.read()
+            
+            affinity = score_job_affinity({
+                "role": meta.get("role", ""),
+                "company": meta.get("company", ""),
+                "markdown": desc
+            }, pref_profile)
+            
+            skill_match = meta.get("match_score", 75)
+            # Composite formula: 55% skill match + 45% user taste affinity
+            composite = int(round(0.55 * skill_match + 0.45 * affinity))
+            
+            meta["affinity_score"] = affinity
+            meta["composite_score"] = composite
+            meta["preference_parameter"] = pref_profile.get("parameter_name")
+            
+            with open(meta_path, "w", encoding="utf-8") as f:
+                json.dump(meta, f, indent=2)
+        except Exception as e:
+            print(f"Error recalculating affinity for {folder}: {e}")
+
+
+def train_preference_model() -> Dict[str, Any]:
+    """
+    Gathers all applications that have been rated by the user (1-10 scale),
+    and uses Gemini 3.5 Flash Lite to extract candidate career preferences,
+    defining a custom evaluation parameter and updating all application affinity scores.
+    """
+    rated_jobs = []
+    if os.path.exists(APPLICATIONS_DIR):
+        for folder in os.listdir(APPLICATIONS_DIR):
+            folder_path = os.path.join(APPLICATIONS_DIR, folder)
+            meta_path = os.path.join(folder_path, "meta.json")
+            if not os.path.exists(meta_path):
+                continue
+            try:
+                with open(meta_path, "r", encoding="utf-8") as f:
+                    meta = json.load(f)
+                rating = meta.get("user_rating")
+                if rating is not None and rating > 0:
+                    desc_path = os.path.join(folder_path, "job_description.md")
+                    desc = ""
+                    if os.path.exists(desc_path):
+                        with open(desc_path, "r", encoding="utf-8") as df:
+                            desc = df.read()[:800]
+                    rated_jobs.append({
+                        "company": meta.get("company", "Company"),
+                        "role": meta.get("role", "Role"),
+                        "rating": rating,
+                        "description_snippet": desc
+                    })
+            except Exception:
+                continue
+
+    current_profile = get_user_preference_profile()
+    if not rated_jobs:
+        recalculate_all_affinities(current_profile)
+        return current_profile
+
+    api_key = get_gemini_api_key()
+    if api_key:
+        prompt = (
+            "You are the Career AI Intelligence Engine for candidate Sanshray Choudhary (USICT ECE student, GPA 8.42).\n"
+            "Below is a list of job applications that the user has personally reviewed and rated on a scale of 1 to 10 "
+            "(10 = dream job, 8-9 = very high interest, 5-7 = average/moderate, 1-4 = low interest or disliked):\n\n"
+            + json.dumps(rated_jobs, indent=2) + "\n\n"
+            "Your tasks:\n"
+            "1. Deeply analyze the underlying patterns behind why the candidate gave high ratings (8-10) vs low ratings (1-4).\n"
+            "2. Formulate a personalized evaluation parameter name (e.g. 'Deep-Tech & Autonomous Hardware Prototyping Index').\n"
+            "3. Define a concise 1-sentence definition of this parameter.\n"
+            "4. Identify 5-8 strong positive keywords/signals that boost this affinity score.\n"
+            "5. Identify 3-5 negative or low-appeal signals (e.g. pure manual QA, non-embedded IT, etc.).\n"
+            "6. Provide a 2-sentence summary of the candidate's learned career taste.\n\n"
+            "Return a valid JSON object matching:\n"
+            "{\n"
+            '  "parameter_name": "...",\n'
+            '  "parameter_description": "...",\n'
+            '  "positive_signals": ["..."],\n'
+            '  "negative_signals": ["..."],\n'
+            '  "learned_taste_summary": "..."\n'
+            "}"
+        )
+
+        model = "gemini-3.5-flash-lite"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.25}
+        }
+
+        try:
+            res = requests.post(url, json=payload, timeout=20)
+            if res.status_code == 200:
+                raw_text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+                learned = json.loads(raw_text)
+                learned["rated_count"] = len(rated_jobs)
+                learned["last_updated"] = datetime.now().isoformat()
+                with open(PREFERENCES_PATH, "w", encoding="utf-8") as f:
+                    json.dump(learned, f, indent=2)
+                current_profile = learned
+        except Exception as e:
+            print(f"Error distilling preference profile with Gemini: {e}")
+
+    recalculate_all_affinities(current_profile)
+    return current_profile
 
 

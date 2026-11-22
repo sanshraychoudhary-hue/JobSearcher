@@ -233,6 +233,47 @@
           <!-- Populated dynamically -->
         </div>
       </div>
+
+      <!-- AI Learned Career Preferences Parameter Card -->
+      <div class="bg-white dark:bg-[#1a1a19] rounded-xl border border-[#eae6df] dark:border-[#262624] p-6 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold text-stone-900 dark:text-white flex items-center gap-2">
+                <span id="pref-param-title">Learned Parameter: Deep-Tech & Prototyping Index</span>
+                <span id="pref-badge-count" class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-bold">0 Rated Jobs</span>
+              </h3>
+              <p id="pref-param-desc" class="text-xs text-stone-500 mt-0.5">Synthesized by Gemini from your 1-10 job ratings to automatically rank opportunities by what you genuinely enjoy.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-lg bg-stone-50 dark:bg-stone-900/60 border border-stone-200/60 dark:border-stone-800 text-xs text-stone-600 dark:text-stone-300">
+          <p id="pref-taste-summary" class="italic">"Rate jobs 1 to 10 in the application detail view. Gemini will continuously analyze your preferences, discover what kind of work excites you, and rank incoming opportunities accordingly."</p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div class="p-3 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40">
+            <span class="font-semibold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 mb-2">
+              <i data-lucide="thumbs-up" class="w-3.5 h-3.5"></i> Positive Taste Signals (High Rating Boost)
+            </span>
+            <div id="pref-pos-signals" class="flex flex-wrap gap-1.5">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <div class="p-3 rounded-lg bg-rose-50/50 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40">
+            <span class="font-semibold text-rose-800 dark:text-rose-300 flex items-center gap-1.5 mb-2">
+              <i data-lucide="thumbs-down" class="w-3.5 h-3.5"></i> Low Appeal Signals (Affinity Penalty)
+            </span>
+            <div id="pref-neg-signals" class="flex flex-wrap gap-1.5">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
     </main>
 
     <!-- VIEW 2: APPLICATIONS KANBAN BOARD -->
@@ -327,6 +368,27 @@
             <option value="Offer">Offer</option>
             <option value="Rejected">Rejected</option>
           </select>
+
+          <!-- 1-to-10 User Rating & Taste Affinity -->
+          <div class="flex items-center gap-1.5 ml-2 border-l border-stone-200 dark:border-stone-800 pl-2">
+            <span class="text-[11px] text-stone-400 font-medium">Rating:</span>
+            <select id="app-rating-select" onchange="rateApplication(this.value)" class="text-xs font-semibold px-2 py-1 rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-200 border border-amber-200 dark:border-amber-800 focus:outline-none cursor-pointer">
+              <option value="0">☆ Rate (1-10)</option>
+              <option value="10">★ 10/10 - Dream Job</option>
+              <option value="9">★ 9/10 - Excellent</option>
+              <option value="8">★ 8/10 - High Interest</option>
+              <option value="7">★ 7/10 - Good Fit</option>
+              <option value="6">★ 6/10 - Solid</option>
+              <option value="5">★ 5/10 - Moderate</option>
+              <option value="4">★ 4/10 - Low Interest</option>
+              <option value="3">★ 3/10 - Unfavorable</option>
+              <option value="2">★ 2/10 - Bad Fit</option>
+              <option value="1">★ 1/10 - Dislike</option>
+            </select>
+            <span id="app-affinity-badge" class="hidden text-[10px] px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800 flex items-center gap-1">
+              <i data-lucide="sparkles" class="w-3 h-3 text-indigo-500"></i> <span id="app-affinity-text">Taste: --</span>
+            </span>
+          </div>
         </div>
 
         <div class="flex items-center gap-2">
@@ -621,6 +683,30 @@
       document.getElementById('count-offer').innerText = data.counts.Offer || 0;
       document.getElementById('count-rejected').innerText = data.counts.Rejected || 0;
 
+      // Render AI Learned Preference Parameter
+      if (data.preferences) {
+        const p = data.preferences;
+        if (p.learned_parameter_name && document.getElementById('pref-param-title')) {
+          document.getElementById('pref-param-title').innerText = `Learned Parameter: ${p.learned_parameter_name}`;
+        }
+        if (document.getElementById('pref-badge-count')) {
+          document.getElementById('pref-badge-count').innerText = `${p.rated_count || 0} Rated Jobs`;
+        }
+        if (p.taste_summary && document.getElementById('pref-taste-summary')) {
+          document.getElementById('pref-taste-summary').innerText = `"${p.taste_summary}"`;
+        }
+        if (p.positive_signals && document.getElementById('pref-pos-signals')) {
+          document.getElementById('pref-pos-signals').innerHTML = p.positive_signals.map(s => 
+            `<span class="px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 font-medium text-[11px]">+ ${s}</span>`
+          ).join('');
+        }
+        if (p.negative_signals && document.getElementById('pref-neg-signals')) {
+          document.getElementById('pref-neg-signals').innerHTML = p.negative_signals.map(s => 
+            `<span class="px-2 py-0.5 rounded bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 font-medium text-[11px]">- ${s}</span>`
+          ).join('');
+        }
+      }
+
       // Render worth a look
       const container = document.getElementById('worth-a-look-list');
       if (data.worth_a_look && data.worth_a_look.length > 0) {
@@ -634,6 +720,7 @@
               </div>
             </div>
             <div class="flex items-center gap-2">
+              ${item.affinity_score !== undefined ? `<span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 border border-indigo-200/60 dark:border-indigo-800">Taste ${item.affinity_score}%</span>` : ''}
               <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">${item.match_score}% Match</span>
               <span class="text-xs text-stone-400 font-medium">Review →</span>
             </div>
@@ -675,12 +762,16 @@
           <div onclick="openApplicationDetail('${app.id}')" class="p-3.5 bg-white dark:bg-[#1c1917] rounded-xl border border-stone-200/80 dark:border-stone-800 shadow-sm hover:shadow transition cursor-pointer">
             <div class="flex justify-between items-start gap-2">
               <h4 class="font-semibold text-xs text-stone-900 dark:text-white truncate">${app.role}</h4>
-              <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">${app.match_score}%</span>
+              <div class="flex items-center gap-1 shrink-0">
+                ${app.affinity_score !== undefined ? `<span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border border-indigo-200/50" title="AI Learned Taste Affinity">Taste ${app.affinity_score}%</span>` : ''}
+                <span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 shrink-0">${app.match_score}%</span>
+              </div>
             </div>
             <div class="flex items-center gap-1.5 mt-0.5 flex-wrap">
               <p class="text-[11px] text-stone-500 truncate">${app.company}</p>
               <span class="text-[9px] px-1 py-0.2 rounded bg-stone-100 dark:bg-stone-800 text-stone-500 font-medium">${portalBadge}</span>
               ${app.seniority ? `<span class="text-[9px] px-1 py-0.2 rounded bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 font-medium">${app.seniority}</span>` : ''}
+              ${app.user_rating ? `<span class="text-[9px] px-1 py-0.2 rounded bg-amber-100 dark:bg-amber-900/50 text-amber-900 dark:text-amber-200 font-bold">★ ${app.user_rating}/10</span>` : ''}
             </div>
             <div class="mt-3 pt-2 border-t border-stone-100 dark:border-stone-800/80 flex items-center justify-between text-[10px] text-stone-400">
               <span>${app.created_at ? app.created_at.slice(0,10) : 'Recent'}</span>
@@ -730,6 +821,15 @@
       document.getElementById('app-match-badge').innerText = `${currentApp.match_score}%`;
       document.getElementById('app-seniority-badge').innerText = currentApp.seniority || 'Experience: Flexible';
 
+      // Set user rating and taste affinity badge
+      document.getElementById('app-rating-select').value = currentApp.user_rating || '0';
+      if (currentApp.affinity_score !== undefined) {
+        document.getElementById('app-affinity-badge').classList.remove('hidden');
+        document.getElementById('app-affinity-text').innerText = `Taste: ${currentApp.affinity_score}%`;
+      } else {
+        document.getElementById('app-affinity-badge').classList.add('hidden');
+      }
+
       const url = currentApp.url || '#';
       document.getElementById('app-ats-link').href = url;
       let label = 'Open Direct Requisition';
@@ -753,6 +853,31 @@
 
       // Load Refine history
       renderRefineChat();
+    }
+
+    async function rateApplication(ratingVal) {
+      if (!currentApp) return;
+      const rating = parseInt(ratingVal) || 0;
+      currentApp.user_rating = rating;
+      try {
+        const res = await fetch(`/api/applications/${currentApp.id}/rate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rating: rating })
+        });
+        const data = await res.json();
+        if (data.success) {
+          if (data.affinity_score !== undefined) {
+            currentApp.affinity_score = data.affinity_score;
+            document.getElementById('app-affinity-badge').classList.remove('hidden');
+            document.getElementById('app-affinity-text').innerText = `Taste: ${data.affinity_score}%`;
+          }
+          await loadApplications();
+          await loadDashboard();
+        }
+      } catch (e) {
+        console.error("Failed to rate application:", e);
+      }
     }
 
     async function loadSettings() {
